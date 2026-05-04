@@ -1,7 +1,33 @@
-// src/avm/reactor.rs — Reactor GUI audit log simulation
+//! Reactor GUI audit-log simulation.
+//!
+//! Emits a structured, human-readable log of a smart contract execution event
+//! in the style of the Reactor GUI deployed by Polar Bear Systems.  The log
+//! captures three phases:
+//!
+//! 1. **STATE BEFORE** — wallet balance and pool conditions prior to execution.
+//! 2. **EXECUTION** — method called, gas estimate, AVM mode, and tx signature.
+//! 3. **STATE AFTER** — resulting balance, tokens received, fee paid, and
+//!    final status.
+//!
+//! In production this would write to a persistent audit store.  In the demo it
+//! writes structured fields to the `tracing` subscriber at `INFO` level.
+
 use crate::{onchain::jupiter::SwapResult, sor::router::Route};
 use tracing::info;
 
+/// Emit a full Reactor GUI audit log for one swap execution.
+///
+/// Reads display fields from `route` (venue, price, fee) and `swap` (amounts,
+/// signature, dry-run flag) and emits them as a framed log block.
+///
+/// # Arguments
+///
+/// * `route` — The SOR-selected execution venue and price quote.
+/// * `swap`  — The result returned by the Jupiter swap simulation.
+///
+/// # Errors
+///
+/// Currently infallible.
 pub fn emit_audit_log(route: &Route, swap: &SwapResult) -> anyhow::Result<()> {
     info!("[REACTOR GUI] ╔══════════════════════════════════════╗");
     info!("[REACTOR GUI] ║  Smart Contract Deployment Audit Log ║");

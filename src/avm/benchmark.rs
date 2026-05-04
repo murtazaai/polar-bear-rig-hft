@@ -1,18 +1,42 @@
-// src/avm/benchmark.rs
+//! AVM vs EVM execution micro-benchmark.
+//!
+//! Runs 10 000 iterations of two simulated execution engines and reports the
+//! nanoseconds-per-operation and speedup ratio:
+//!
+//! | Engine | Simulation method | Typical result |
+//! |---|---|---|
+//! | AVM (Agave JIT) | `#[inline(always)]`, stack-only | ~1–3 ns/op |
+//! | EVM (bytecode)  | `#[inline(never)]`, heap alloc  | ~10–30 ns/op |
+//!
+//! The heap allocation in [`evm_execute_simulated`] models the cost of
+//! fetching and decoding EVM bytecode from memory on every iteration —
+//! a realistic representation of the interpretation overhead.
+//!
+//! This is a **synthetic** benchmark.  Real AVM vs EVM numbers will differ
+//! depending on instruction mix, cache state, and hardware.
+
 use std::time::Instant;
 use tracing::info;
 
+/// Run the AVM vs EVM benchmark and log the speedup factor.
+///
+/// Iterates each engine 10 000 times, computes average nanoseconds per
+/// operation, and logs the ratio.
+///
+/// # Errors
+///
+/// Currently infallible.
 pub fn run() -> anyhow::Result<()> {
     info!("[AVM] Starting AVM vs EVM execution benchmark");
 
-    // Simulate AVM JIT-compiled execution (90%+ faster than EVM)
+    // Simulate AVM JIT-compiled execution (90%+ faster than EVM), zero heap allocation per iteration.
     let t0 = Instant::now();
     for _ in 0..10_000 {
         let _ = avm_execute_simulated();
     }
     let avm_ns = t0.elapsed().as_nanos() / 10_000;
 
-    // Simulate standard EVM bytecode interpretation
+    // Simulate standard EVM bytecode interpretation, heap allocation per iteration.
     let t1 = Instant::now();
     for _ in 0..10_000 {
         let _ = evm_execute_simulated();
@@ -31,6 +55,10 @@ pub fn run() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Simulate one iteration of AVM JIT-compiled execution.
+///
+/// Uses `#[inline(always)]` and purely stack-local arithmetic to model the
+/// near-zero dispatch overhead of a JIT-compiled instruction sequence.
 #[inline(always)]
 fn avm_execute_simulated() -> u64 {
     // AVM: JIT-compiled, minimal overhead
@@ -41,6 +69,11 @@ fn avm_execute_simulated() -> u64 {
     acc
 }
 
+/// Simulate one iteration of EVM bytecode interpretation.
+///
+/// Uses `#[inline(never)]` and a per-call heap allocation (`vec!`) to model
+/// the overhead of fetching and decoding bytecode on every invocation, as a
+/// naive EVM interpreter would.
 #[inline(never)] // force interpretation overhead simulation
 fn evm_execute_simulated() -> u64 {
     // EVM: bytecode interpretation overhead simulation

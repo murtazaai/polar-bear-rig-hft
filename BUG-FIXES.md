@@ -28,4 +28,5 @@
     Root Cause: rig-core 0.36 transitively required reqwest ^0.13; mismatching majors caused two copies and potential API collisions
 12. Fix: Changed the reqwest feature to rustls. rustls is also pulled in automatically via the default feature set (default → default-tls → rustls), so never needed to be explicit, we can just write features = ["json"] and TLS comes for free. Keept it explicit as "rustls" made the intent clear.
     Root Cause: `reqwest` with feature `rustls-tls` but `reqwest` does not have that feature.  In reqwest 0.13 the feature was renamed: rustls-tls → rustls.
-13. To be continued.
+13. Rust Doc comments added.
+14. To be continued.

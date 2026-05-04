@@ -1,5 +1,11 @@
 //! Smart Order Routing: compare Raydium, Orca, Serum — select best venue.
 //! Logs: venue name, effective price, fee bps, routing latency in ms.
+//! Core SOR logic — concurrent venue queries and cost-adjusted ranking.
+//!
+//! [`best_route`] fans out to three venue adapters in parallel using
+//! [`tokio::join!`], collects the successful results, sorts them by effective
+//! cost, and returns the cheapest [`Route`].  End-to-end latency is measured
+//! and stored in [`Route::latency_ms`].
 
 use anyhow::Result;
 use std::time::Instant;

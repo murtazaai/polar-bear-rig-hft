@@ -1,49 +1,63 @@
-//! polar-bear-rig-hft — CLI entry point
+//! polar-bear-rig-hft — CLI entry point.
+//!
 //! Polar Bear Systems | Technology Lead: Murtaza Ali Imtiaz
-//! Rig (Rust Inference Gateway / ARC) · AVM · SignerContext · PEV Loop
+//! Platform: Rig (Rust Inference Gateway / ARC) · AVM · SignerContext · PEV Loop
+//!
+//! ## Usage
+//!
+//! ```bash
+//! # Full pipeline (default)
+//! cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
+//!
+//! # Individual subsystems
+//! cargo run --release -- --mode pev
+//! cargo run --release -- --mode sor
+//! cargo run --release -- --mode signer
+//! cargo run --release -- --mode reactor
+//! ```
+//!
+//! Set `ANTHROPIC_API_KEY` in `.env` or the environment before running.
 
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-use polar_bear_rig_hft::avm;
-use polar_bear_rig_hft::config;
-use polar_bear_rig_hft::onchain;
-use polar_bear_rig_hft::pev;
-use polar_bear_rig_hft::sor;
+use polar_bear_rig_hft::{avm, config, onchain, pev, sor};
 
+/// CLI operating mode — selects which subsystem(s) to exercise.
 #[derive(Debug, Clone, ValueEnum)]
 enum Mode {
-    /// Run full pipeline: PEV → SOR → OnChain → AVM audit
+    /// Run the full pipeline: PEV → SOR → OnChain swap → AVM audit log.
     Full,
-    /// Run only the PEV loop with rig-core
+    /// Run only the PEV loop (Plan → Execute → Verify) via rig-core.
     Pev,
-    /// Run only Smart Order Routing comparison
+    /// Run only the Smart Order Routing venue comparison.
     Sor,
-    /// Run only SignerContext + rig-onchain-kit demo
+    /// Run only the SignerContext isolation demo.
     Signer,
-    /// Run only AVM benchmark + Reactor GUI audit log
+    /// Run only the AVM benchmark and Reactor GUI audit log.
     Reactor,
 }
 
+/// CLI arguments parsed by `clap`.
 #[derive(Parser, Debug)]
 #[command(name = "polar-bear-rig-hft")]
 #[command(about = "Optimal HFT platform using Rig (ARC) — Polar Bear Systems")]
 struct Args {
-    /// Operating mode
+    /// Operating mode (default: full).
     #[arg(short, long, default_value = "full")]
     mode: Mode,
 
-    /// Enable live on-chain transactions (default: dry-run)
+    /// Enable live on-chain transactions.  Defaults to dry-run.
     #[arg(long, default_value_t = false)]
     live: bool,
 
-    /// Trade pair for SOR/onchain (e.g. SOL/USDC)
+    /// Trading pair passed to SOR and PEV (e.g. `SOL/USDC`).
     #[arg(short, long, default_value = "SOL/USDC")]
     pair: String,
 
-    /// Amount to trade (in base token units)
+    /// Amount of the base token to trade.
     #[arg(short, long, default_value_t = 1.0)]
     amount: f64,
 }

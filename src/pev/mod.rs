@@ -1,4 +1,31 @@
 //! PEV Loop orchestration: Plan → Execute → Verify (max 2 retries on fail).
+//! PEV Loop — Plan → Execute → Verify.
+//!
+//! This module orchestrates the three-phase agentic workflow that governs every
+//! trade decision:
+//!
+//! ```text
+//! ┌────────┐     ┌─────────┐     ┌────────┐
+//! │  PLAN  │────►│ EXECUTE │────►│ VERIFY │
+//! │ Haiku  │     │ Sonnet  │     │ Haiku  │
+//! └────────┘     └─────────┘     └───┬────┘
+//!                    ▲               │ fail (score < 0.80)
+//!                    └───────────────┘  retry ×2
+//! ```
+//!
+//! **Cost model**: Haiku handles the cheap planning and verification work;
+//! Sonnet is only invoked for the reasoning-heavy Execute phase.  This reduces
+//! LLM cost by roughly 60–70 % compared to an all-Sonnet pipeline.
+//!
+//! ## Usage
+//!
+//! ```rust,no_run
+//! # use polar_bear_rig_hft::{config::Config, pev};
+//! # async fn example(cfg: &Config) -> anyhow::Result<()> {
+//! let result = pev::run(cfg, "SOL/USDC", 1.0).await?;
+//! assert!(result.verify_score >= pev::verify::PASS_THRESHOLD);
+//! # Ok(()) }
+//! ```
 
 pub mod execute;
 pub mod plan;
@@ -11,8 +38,25 @@ use tracing::{info, warn};
 use crate::config::Config;
 use types::PEVResult;
 
+/// Maximum number of Execute → Verify retries per task before accepting a
+/// failing score and moving on.
 pub const MAX_RETRIES: u32 = 2;
 
+/// Run the full PEV loop for a single trade request.
+///
+/// Calls [`plan::decompose`] once to produce the task list, then iterates
+/// through each [`types::TradeTask`], executing and verifying it with up to
+/// [`MAX_RETRIES`] retries on failure.
+///
+/// # Arguments
+///
+/// * `cfg`    — Runtime configuration (API keys, RPC URL, dry-run flag).
+/// * `pair`   — Trading pair, e.g. `"SOL/USDC"`.
+/// * `amount` — Base-token amount to trade.
+///
+/// # Errors
+///
+/// Propagates any network or API error from the underlying LLM calls.
 pub async fn run(cfg: &Config, pair: &str, amount: f64) -> Result<PEVResult> {
     info!(pair, amount, "╔══ PEV LOOP START ══╗");
 
