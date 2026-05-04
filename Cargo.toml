@@ -12,7 +12,7 @@ path = "src/main.rs"
 
 # ── CORE RIG (ARC) ────────────────────────────────────────────────
 [dependencies]
-rig-core = { version = "^0.9.1" }
+rig-core = { version = "^0.36" }
 
 # Uncomment when rig-onchain-kit is published to crates.io
 # rig-onchain-kit = { version = "0.1", features = ["full"] }
@@ -40,7 +40,7 @@ serde            = { version = "^1", features = ["derive"] }
 serde_json       = "^1"
 
 # ── HTTP / APIs ───────────────────────────────────────────────────
-reqwest  = { version = "^0.12", features = ["json", "rustls-tls"] }
+reqwest  = { version = "^0.13.0", features = ["json", "rustls"] }
 
 # ── CLI ───────────────────────────────────────────────────────────
 clap     = { version = "^4", features = ["derive"] }

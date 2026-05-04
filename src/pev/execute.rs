@@ -2,7 +2,7 @@
 //! Demonstrates multi-step agentic workflow with tool use + LLM reasoning.
 
 use anyhow::Result;
-use rig::{completion::Prompt, providers::anthropic, tool::Tool};
+use rig::{completion::Prompt, providers::anthropic};
 use std::sync::Arc;
 use tracing::{debug, info};
 
@@ -26,13 +26,9 @@ pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
         .build();
 
     let prompt = format!(
-        "Task ID: {}\nAction: {:?}\nPair: {}\nAmount: {} SOL\n",
-        "Acceptance criteria: {:?}\nExecute this task now.",
-        task.id,
-        task.action,
-        task.pair,
-        task.amount,
-        task.acceptance_criteria
+        "Task ID: {}\nAction: {:?}\nPair: {}\nAmount: {} SOL\n \
+         Acceptance criteria: {:?}\nExecute this task now.",
+        task.id, task.action, task.pair, task.amount, task.acceptance_criteria
     );
 
     let response = executor.prompt(&prompt).await?;

@@ -30,8 +30,8 @@ pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<Trad
         .build();
 
     let prompt = format!(
-        "Decompose this HFT trade into atomic tasks: pair={pair}, amount={amount} SOL. ",
-        "Return JSON array only."
+        "Decompose this HFT trade into atomic tasks: pair={pair}, amount={amount} SOL. \
+         Return JSON array only."
     );
 
     let response = planner.prompt(&prompt).await?;
@@ -55,7 +55,7 @@ pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<Trad
     Ok(tasks)
 }
 
-fn default_tasks(pair: &str, amount: f64) -> Vec<TradeTask> {
+pub fn default_tasks(pair: &str, amount: f64) -> Vec<TradeTask> {
     vec![
         TradeTask {
             id: "T001".into(),

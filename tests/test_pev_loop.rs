@@ -3,9 +3,9 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::config::Config;
-    use crate::pev::types::{ExecuteOutput, TradeAction, TradeTask};
-    use crate::pev::{plan, verify};
+    use polar_bear_rig_hft::config::Config;
+    use polar_bear_rig_hft::pev::types::{ExecuteOutput, TradeAction, TradeTask};
+    use polar_bear_rig_hft::pev::{plan, verify};
 
     fn test_task() -> TradeTask {
         TradeTask {

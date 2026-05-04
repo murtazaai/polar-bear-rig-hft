@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::onchain::signer::{with_signer, LocalSolanaSigner};
+    use polar_bear_rig_hft::onchain::signer::{with_signer, LocalSolanaSigner};
 
     #[tokio::test]
     async fn test_signer_context_isolation() {

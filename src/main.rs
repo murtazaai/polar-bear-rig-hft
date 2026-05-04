@@ -7,11 +7,11 @@ use clap::{Parser, ValueEnum};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-mod avm;
-mod config;
-mod onchain;
-mod pev;
-mod sor;
+use polar_bear_rig_hft::avm;
+use polar_bear_rig_hft::config;
+use polar_bear_rig_hft::onchain;
+use polar_bear_rig_hft::pev;
+use polar_bear_rig_hft::sor;
 
 #[derive(Debug, Clone, ValueEnum)]
 enum Mode {
