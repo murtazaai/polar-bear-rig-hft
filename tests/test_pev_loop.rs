@@ -1,5 +1,6 @@
 //! Integration test: PEV loop with mocked LLM responses.
 //! Tests plan decomposition, execute output, verify scoring.
+//! Integration test: PEV loop types, default tasks, and verify threshold.
 
 #[cfg(test)]
 mod tests {
