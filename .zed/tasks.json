@@ -1,0 +1,24 @@
+[
+  {
+    "label": "cargo build (dev)",
+    "command": "cargo build",
+    "args": [],
+    "env": { "CARGO_INCREMENTAL": "1" },
+  },
+  {
+    "label": "cargo build (release)",
+    "command": "cargo build",
+    "args": ["--release"],
+    "env": { "CARGO_INCREMENTAL": "0", "RUSTFLAGS": "-C target-cpu=native" },
+  },
+  {
+    "label": "cargo test",
+    "command": "cargo test",
+    "args": ["--", "--test-threads=8"],
+  },
+  {
+    "label": "cargo check (fast)",
+    "command": "cargo check",
+    "args": ["--all-targets"],
+  },
+]
