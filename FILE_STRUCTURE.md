@@ -90,7 +90,7 @@ polar-bear-rig-hft/
 |---|---|
 | Lib + bin targets | Integration tests are external crates; lib exposes `polar_bear_rig_hft::` |
 | Rust 2024 edition | Matches the rig upstream repository |
-| `CompletionClient` + `ProviderClient` | Both required by rig-core ≥ 0.36 for `.agent()` |
+| `CompletionClient`| Both required by rig-core ≥ 0.36 for `.agent()` |
 | `Client::new(...)? ` not `Arc::new(Client::new(...))` | `Client::new` is fallible in 0.36+ |
 | `tokio::task_local!` with `//` not `///` | rustdoc cannot attach to macro invocation sites |
 | `#[ignore]` on live tests | Prevents CI failures when `ANTHROPIC_API_KEY` is absent |

@@ -86,7 +86,7 @@ RUSTDOCFLAGS="--cfg docsrs" cargo doc # with docsrs conditional items
 
 - **Edition**: Rust 2024
 - **Max line width**: 100 characters (enforced by `rustfmt.toml`)
-- **Imports**: `use rig::client::{CompletionClient, ProviderClient}` — both traits are
+- **Imports**: `use rig::client::CompletionClient` — both traits are
   required to call `.agent()` on any rig-core 0.36+ Anthropic client
 - **Doc comments**: `//!` for module-level docs; `///` for items; never `///` or `/** */`
   on macro invocation sites (triggers `unused_doc_comments`)

@@ -21,16 +21,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `CONTRIBUTING.md` — contribution guide
 
 ### Changed
-- `src/pev/{plan,execute,verify}.rs` — expanded `use rig::{client::CompletionClient, ...}` to
-  the multi-line form `use rig::{ client::{CompletionClient, ProviderClient}, ... }` (Fix 17).
+- `src/pev/{plan,execute,verify}.rs` — expanded `use rig::client::CompletionClient` to
+  the multi-line form `use rig::{ client::CompletionClient` (Fix 17).
   Fix 16 documented both traits in module-level `//!` comments but only `CompletionClient` was
-  present in the actual `use` statement; `ProviderClient` must be *imported*, not just mentioned.
+  present in the actual `use` statement; `CompletionClient` must be *imported*, not just mentioned.
 - `Cargo.toml` — upgraded to Rust **2024 edition**; added `rust-version = "1.85.0"`,
   `[package.metadata.docs.rs]`, and `[lints]` tables; removed unused `futures` dependency;
   aligned `thiserror` to `^2`; added `strip = "debuginfo"` to release profile
-- `src/pev/{plan,execute,verify}.rs` — added `rig::client::ProviderClient` to imports;
-  `.agent()` in rig-core ≥ 0.36 requires both `CompletionClient` **and** `ProviderClient`
-  in scope (omitting `ProviderClient` produces `E0599: no method named 'agent'`)
+- `src/pev/{plan,execute,verify}.rs` — added `rig::client::CompletionClient` to imports;
+  `.agent()` in rig-core ≥ 0.36 requires both `CompletionClient` 
+  in scope
 - `src/pev/plan.rs` — converted PLAN_PREAMBLE from `r#"..."#` to `r"..."` (no `#` needed;
   matches 2024 edition style)
 - `src/pev/execute.rs` — same preamble conversion
@@ -58,7 +58,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   no duplicate `//!` blocks, correct code-fence languages)
 - **Fix 15** — removed `Arc::new(anthropic::Client::new(...))`;  `Client::new` is fallible
   in rig-core 0.36+ and must be unwrapped with `?`; `Arc` was unnecessary
-- **Fix 16** — added `rig::client::ProviderClient` import alongside `CompletionClient`
+- **Fix 16** — added `rig::client::CompletionClient` import 
   in all three PEV phase files
 
 ---

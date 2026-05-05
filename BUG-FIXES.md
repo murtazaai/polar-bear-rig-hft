@@ -32,14 +32,14 @@
 14. Fix: Rust Doc Comments Syntax and Semantics corrected.
 15. Fix: The Arc was also unnecessary, client consumed immediately by .agent().preamble().build() in the very next line and never shared across tasks, so removed it has no effect on behaviour. The use std::sync::Arc; import was also removed from all three files to keep them warning-free.
     Root Cause: In rig-core 0.36, anthropic::Client::new(&key) was made fallible, it now returns Result<Client<AnthropicExt>, Error> rather than a bare Client. The code was wrapping the call in Arc::new(...), which produced Arc<Result<…>>. Rust's method resolution couldn't find .agent() on that type, hence the E0599.
-16. Fix: Added `rig::client::CompletionClient` and `rig::client::ProviderClient` trait imports to all three PEV phase files.
-    Root Cause: In rig-core 0.36+, `.agent()` is a method on the `CompletionClient` trait, not an inherent method on `anthropic::Client`. Without bringing `CompletionClient` into scope, the compiler cannot resolve the method call even though `Client<AnthropicExt>` implements the trait. The official rig documentation and GitHub examples show the canonical import as `use rig::client::{CompletionClient, ProviderClient};`. Both traits must be in scope.
+16. Fix: Added `rig::client::CompletionClient` trait imports to all three PEV phase files.
+    Root Cause: In rig-core 0.36+, `.agent()` is a method on the `CompletionClient` trait, not an inherent method on `anthropic::Client`. Without bringing `CompletionClient` into scope, the compiler cannot resolve the method call even though `Client<AnthropicExt>` implements the trait. The official rig documentation and GitHub examples show the canonical import as `use rig::client::CompletionClient;`. Both traits must be in scope.
     Files: src/pev/execute.rs, src/pev/plan.rs, src/pev/verify.rs
-17. Fix: Added `rig::client::ProviderClient` to the actual `use` import statement in all three PEV phase files, alongside the already-present `CompletionClient`.
-    Root Cause: Fix 16 correctly documented the requirement for both `CompletionClient` and `ProviderClient` in the module-level `//!` doc comments, and the module docs were updated to describe both traits. However, the actual `use rig::{...}` import line was only updated to include `CompletionClient` — `ProviderClient` was documented but never imported. At compile time the compiler still cannot resolve `.agent()` because the trait must be *in scope* via a `use` item, not merely mentioned in documentation. The fix expands the import to the multi-line canonical form used in all official rig 0.36 examples:
+17. Fix: Added `rig::client::CompletionClient` to the actual `use` import statement in all three PEV phase files.
+    Root Cause: Fix 16 correctly documented the requirement for both `CompletionClient` and `ProviderClient` in the module-level `//!` doc comments, and the module docs were updated to describe both traits. However, the actual `use rig::{...}` import line was only updated to include `CompletionClient` was documented but never imported. At compile time the compiler still cannot resolve `.agent()` because the trait must be *in scope* via a `use` item, not merely mentioned in documentation. The fix expands the import to the multi-line canonical form used in all official rig 0.36 examples:
     ```rust
     use rig::{
-        client::{CompletionClient, ProviderClient},
+        client::CompletionClient,
         completion::Prompt,
         providers::anthropic,
     };
