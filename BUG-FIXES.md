@@ -35,3 +35,13 @@
 16. Fix: Added `rig::client::CompletionClient` and `rig::client::ProviderClient` trait imports to all three PEV phase files.
     Root Cause: In rig-core 0.36+, `.agent()` is a method on the `CompletionClient` trait, not an inherent method on `anthropic::Client`. Without bringing `CompletionClient` into scope, the compiler cannot resolve the method call even though `Client<AnthropicExt>` implements the trait. The official rig documentation and GitHub examples show the canonical import as `use rig::client::{CompletionClient, ProviderClient};`. Both traits must be in scope.
     Files: src/pev/execute.rs, src/pev/plan.rs, src/pev/verify.rs
+17. Fix: Added `rig::client::ProviderClient` to the actual `use` import statement in all three PEV phase files, alongside the already-present `CompletionClient`.
+    Root Cause: Fix 16 correctly documented the requirement for both `CompletionClient` and `ProviderClient` in the module-level `//!` doc comments, and the module docs were updated to describe both traits. However, the actual `use rig::{...}` import line was only updated to include `CompletionClient` — `ProviderClient` was documented but never imported. At compile time the compiler still cannot resolve `.agent()` because the trait must be *in scope* via a `use` item, not merely mentioned in documentation. The fix expands the import to the multi-line canonical form used in all official rig 0.36 examples:
+    ```rust
+    use rig::{
+        client::{CompletionClient, ProviderClient},
+        completion::Prompt,
+        providers::anthropic,
+    };
+    ```
+    Files: src/pev/plan.rs, src/pev/execute.rs, src/pev/verify.rs

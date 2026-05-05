@@ -12,12 +12,13 @@
 //! [`crate::pev`] orchestrator injects the verifier's feedback into the next
 //! attempt, up to [`crate::pev::MAX_RETRIES`] retries.
 //!
-//! ## Rig client trait requirements
+//! ## Rig client trait requirements (rig-core ≥ 0.36)
 //!
-//! Calling `.agent()` on `anthropic::Client` requires two traits in scope:
+//! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
 //! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] — required by the official rig client
-//!   pattern for provider-specific client construction.
+//! - [`rig::client::ProviderClient`] — required by the rig provider-client pattern;
+//!   omitting it causes `E0599: no method named 'agent'` even though the type
+//!   implements the trait.
 
 use anyhow::Result;
 use rig::{client::CompletionClient, completion::Prompt, providers::anthropic};
@@ -71,12 +72,14 @@ struct VerifyResponse {
 ///
 /// # Errors
 ///
-/// Propagates any LLM API error from `rig-core`.
+/// Returns `Err` if `anthropic::Client::new` fails, or if the LLM API call
+/// itself fails.
 pub async fn score(
     cfg: &Config,
     task: &TradeTask,
     output: &ExecuteOutput,
 ) -> Result<(f64, String, bool)> {
+    // Client::new is fallible in rig-core 0.36+ — unwrap with `?`.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let verifier = client
         .agent("claude-haiku-4-5") // cheap model — verification is low-complexity

@@ -7,12 +7,13 @@
 //! When the LLM response cannot be parsed, [`default_tasks`] is used as a
 //! deterministic fallback so the PEV pipeline always continues forward.
 //!
-//! ## Rig client trait requirements
+//! ## Rig client trait requirements (rig-core ≥ 0.36)
 //!
-//! Calling `.agent()` on `anthropic::Client` requires two traits in scope:
+//! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
 //! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] — required by the official rig client
-//!   pattern for provider-specific client construction.
+//! - [`rig::client::ProviderClient`] — required by the rig provider-client pattern;
+//!   omitting it causes `E0599: no method named 'agent'` even though the type
+//!   implements the trait.
 
 use anyhow::Result;
 use rig::{client::CompletionClient, completion::Prompt, providers::anthropic};
@@ -25,14 +26,14 @@ use crate::config::Config;
 ///
 /// Instructs the model to return **only** a JSON array of `TradeTask` objects
 /// with no surrounding prose or Markdown fences.
-const PLAN_PREAMBLE: &str = r#"
+const PLAN_PREAMBLE: &str = r"
 You are the PLAN agent in a PEV (Plan-Execute-Verify) HFT pipeline.
 Your role: decompose a trade task into a list of atomic sub-tasks.
 Each sub-task must have: id, pair, amount, action, and acceptance_criteria.
 Return ONLY a JSON array of TradeTask objects. No prose. No markdown.
 Actions must be one of: analyse_market, select_route, validate_slippage,
 simulate_execution.
-"#;
+";
 
 /// Decompose a trade request into a [`Vec`] of [`TradeTask`] items.
 ///
@@ -49,14 +50,14 @@ simulate_execution.
 ///
 /// # Errors
 ///
-/// Returns `Err` only if the underlying LLM HTTP call fails (network error,
-/// authentication failure, etc.). A malformed JSON response is handled
-/// internally by falling back to [`default_tasks`].
+/// Returns `Err` if `anthropic::Client::new` fails or the LLM HTTP call fails
+/// (network error, authentication failure, etc.).  A malformed JSON response is
+/// handled internally by falling back to [`default_tasks`].
 pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<TradeTask>> {
     info!(pair, amount, "[PLAN] Decomposing trade task");
 
-    // Haiku is the cheapest model — chosen deliberately to minimise cost for
-    // the planning phase per the PEV cost model.
+    // Client::new is fallible in rig-core 0.36+ — unwrap with `?`.
+    // Haiku is chosen deliberately: cheapest model per the PEV cost model.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let planner = client
         .agent("claude-haiku-4-5")
@@ -103,33 +104,34 @@ pub fn default_tasks_pub(pair: &str, amount: f64) -> Vec<TradeTask> {
 /// directly by tests via [`default_tasks_pub`]. The four tasks cover the
 /// complete trade lifecycle: analyse → route → slippage check → execution.
 fn default_tasks(pair: &str, amount: f64) -> Vec<TradeTask> {
+    use crate::pev::types::TradeAction;
     vec![
         TradeTask {
             id: "T001".into(),
             pair: pair.to_string(),
             amount,
-            action: crate::pev::types::TradeAction::AnalyseMarket,
+            action: TradeAction::AnalyseMarket,
             acceptance_criteria: vec!["Market data retrieved".into()],
         },
         TradeTask {
             id: "T002".into(),
             pair: pair.to_string(),
             amount,
-            action: crate::pev::types::TradeAction::SelectRoute,
+            action: TradeAction::SelectRoute,
             acceptance_criteria: vec!["Best DEX venue selected".into()],
         },
         TradeTask {
             id: "T003".into(),
             pair: pair.to_string(),
             amount,
-            action: crate::pev::types::TradeAction::ValidateSlippage,
+            action: TradeAction::ValidateSlippage,
             acceptance_criteria: vec!["Slippage within 0.5% tolerance".into()],
         },
         TradeTask {
             id: "T004".into(),
             pair: pair.to_string(),
             amount,
-            action: crate::pev::types::TradeAction::SimulateExecution,
+            action: TradeAction::SimulateExecution,
             acceptance_criteria: vec!["Dry-run swap simulation logged".into()],
         },
     ]

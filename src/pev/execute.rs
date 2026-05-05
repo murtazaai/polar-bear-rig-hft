@@ -9,12 +9,13 @@
 //! pipeline. It is deliberately confined to the Execute phase only; Plan and
 //! Verify use Haiku to keep overall LLM costs down.
 //!
-//! ## Rig client trait requirements
+//! ## Rig client trait requirements (rig-core ≥ 0.36)
 //!
-//! Calling `.agent()` on `anthropic::Client` requires two traits in scope:
+//! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
 //! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] — required by the official rig client
-//!   pattern for provider-specific client construction.
+//! - [`rig::client::ProviderClient`] — required by the rig provider-client pattern;
+//!   omitting it causes `E0599: no method named 'agent'` even though the type
+//!   implements the trait.
 
 use anyhow::Result;
 use rig::{client::CompletionClient, completion::Prompt, providers::anthropic};
@@ -28,11 +29,11 @@ use crate::config::Config;
 /// Instructs Sonnet to think step-by-step, invoke the right tool, and return
 /// a concise result string that the Verify phase can score against acceptance
 /// criteria.
-const EXECUTE_PREAMBLE: &str = r#"
+const EXECUTE_PREAMBLE: &str = r"
 You are the EXECUTE agent in a PEV HFT pipeline running on Rig (ARC).
 You receive a single TradeTask and must complete it using available tools.
 Think step-by-step. Call the appropriate tool. Return a concise result string.
-"#;
+";
 
 /// Execute a single [`TradeTask`] using the Sonnet agent.
 ///
@@ -47,14 +48,16 @@ Think step-by-step. Call the appropriate tool. Return a concise result string.
 ///
 /// # Errors
 ///
-/// Propagates any LLM API error from `rig-core` (network failures,
-/// authentication errors, rate-limit responses).
+/// Returns `Err` if `anthropic::Client::new` fails, or if the LLM API call
+/// itself fails (network error, authentication error, rate-limit).
 pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
     info!(task_id = %task.id, action = ?task.action, "[EXECUTE] Running task");
 
+    // Client::new is fallible in rig-core 0.36+ — unwrap with `?`.
+    // Sonnet is chosen for the Execute phase: best reasoning + tool-use capability.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let executor = client
-        .agent("claude-sonnet-4-6") // capable model for reasoning + tool use
+        .agent("claude-sonnet-4-6")
         .preamble(EXECUTE_PREAMBLE)
         .build();
 
