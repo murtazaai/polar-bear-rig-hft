@@ -8,6 +8,13 @@
 //! Sonnet is the most capable — and most expensive — model in the PEV
 //! pipeline. It is deliberately confined to the Execute phase only; Plan and
 //! Verify use Haiku to keep overall LLM costs down.
+//!
+//! ## Rig client trait requirements
+//!
+//! Calling `.agent()` on `anthropic::Client` requires two traits in scope:
+//! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
+//! - [`rig::client::ProviderClient`] — required by the official rig client
+//!   pattern for provider-specific client construction.
 
 use anyhow::Result;
 use rig::{client::CompletionClient, completion::Prompt, providers::anthropic};

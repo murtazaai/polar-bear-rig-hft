@@ -6,6 +6,13 @@
 //!
 //! When the LLM response cannot be parsed, [`default_tasks`] is used as a
 //! deterministic fallback so the PEV pipeline always continues forward.
+//!
+//! ## Rig client trait requirements
+//!
+//! Calling `.agent()` on `anthropic::Client` requires two traits in scope:
+//! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
+//! - [`rig::client::ProviderClient`] — required by the official rig client
+//!   pattern for provider-specific client construction.
 
 use anyhow::Result;
 use rig::{client::CompletionClient, completion::Prompt, providers::anthropic};

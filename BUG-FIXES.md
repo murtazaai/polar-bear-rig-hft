@@ -32,4 +32,6 @@
 14. Fix: Rust Doc Comments Syntax and Semantics corrected.
 15. Fix: The Arc was also unnecessary, client consumed immediately by .agent().preamble().build() in the very next line and never shared across tasks, so removed it has no effect on behaviour. The use std::sync::Arc; import was also removed from all three files to keep them warning-free.
     Root Cause: In rig-core 0.36, anthropic::Client::new(&key) was made fallible, it now returns Result<Client<AnthropicExt>, Error> rather than a bare Client. The code was wrapping the call in Arc::new(...), which produced Arc<Result<…>>. Rust's method resolution couldn't find .agent() on that type, hence the E0599.
-16. To be continued.
+16. Fix: Added `rig::client::CompletionClient` and `rig::client::ProviderClient` trait imports to all three PEV phase files.
+    Root Cause: In rig-core 0.36+, `.agent()` is a method on the `CompletionClient` trait, not an inherent method on `anthropic::Client`. Without bringing `CompletionClient` into scope, the compiler cannot resolve the method call even though `Client<AnthropicExt>` implements the trait. The official rig documentation and GitHub examples show the canonical import as `use rig::client::{CompletionClient, ProviderClient};`. Both traits must be in scope.
+    Files: src/pev/execute.rs, src/pev/plan.rs, src/pev/verify.rs

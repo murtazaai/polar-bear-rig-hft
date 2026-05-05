@@ -11,6 +11,13 @@
 //! A score ≥ [`PASS_THRESHOLD`] (`0.80`) is considered a pass. On failure the
 //! [`crate::pev`] orchestrator injects the verifier's feedback into the next
 //! attempt, up to [`crate::pev::MAX_RETRIES`] retries.
+//!
+//! ## Rig client trait requirements
+//!
+//! Calling `.agent()` on `anthropic::Client` requires two traits in scope:
+//! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
+//! - [`rig::client::ProviderClient`] — required by the official rig client
+//!   pattern for provider-specific client construction.
 
 use anyhow::Result;
 use rig::{client::CompletionClient, completion::Prompt, providers::anthropic};
