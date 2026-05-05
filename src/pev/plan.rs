@@ -1,27 +1,23 @@
-//! PLAN phase: decompose the trade into atomic tasks using a cheap LLM.
-//! Uses Haiku-class model via rig-core for cost efficiency.
-//! Output: structured JSON list of TradeTask items.
 //! PLAN phase — trade decomposition via a cheap LLM.
 //!
 //! Uses `claude-haiku-4-5` (the lowest-cost Anthropic model) to decompose a
 //! high-level trade request into exactly four atomic [`types::TradeTask`]
-//! objects represented as a JSON array.
+//! objects, returned as a JSON array.
 //!
-//! If the LLM response cannot be parsed, [`default_tasks`] is used as a
-//! deterministic fallback so the pipeline always continues.
+//! When the LLM response cannot be parsed, [`default_tasks`] is used as a
+//! deterministic fallback so the PEV pipeline always continues forward.
 
 use anyhow::Result;
-use rig::{completion::Prompt, providers::anthropic};
-use std::sync::Arc;
+use rig::{client::CompletionClient, completion::Prompt, providers::anthropic};
 use tracing::{debug, info};
 
 use super::types::TradeTask;
 use crate::config::Config;
 
-/// System preamble sent to the planning agent.
+/// System preamble sent to the planning agent on every call.
 ///
 /// Instructs the model to return **only** a JSON array of `TradeTask` objects
-/// with no surrounding prose or markdown.
+/// with no surrounding prose or Markdown fences.
 const PLAN_PREAMBLE: &str = r#"
 You are the PLAN agent in a PEV (Plan-Execute-Verify) HFT pipeline.
 Your role: decompose a trade task into a list of atomic sub-tasks.
@@ -31,14 +27,12 @@ Actions must be one of: analyse_market, select_route, validate_slippage,
 simulate_execution.
 "#;
 
-/// Decompose a trade request into a list of [`TradeTask`] items.
+/// Decompose a trade request into a [`Vec`] of [`TradeTask`] items.
 ///
 /// Calls the Haiku model via `rig-core` with [`PLAN_PREAMBLE`] and a prompt
-/// that contains the pair and amount.  The response is stripped of any
-/// accidental markdown fences before being deserialised.
-///
-/// Falls back to [`default_tasks`] on JSON parse failure to ensure the
-/// pipeline is never blocked by a malformed LLM response.
+/// containing the pair and amount. The response is stripped of any accidental
+/// Markdown fences before deserialisation. On JSON parse failure the function
+/// falls back to [`default_tasks`] so the pipeline is never blocked.
 ///
 /// # Arguments
 ///
@@ -48,14 +42,17 @@ simulate_execution.
 ///
 /// # Errors
 ///
-/// Returns an error if the LLM HTTP call itself fails.
+/// Returns `Err` only if the underlying LLM HTTP call fails (network error,
+/// authentication failure, etc.). A malformed JSON response is handled
+/// internally by falling back to [`default_tasks`].
 pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<TradeTask>> {
     info!(pair, amount, "[PLAN] Decomposing trade task");
 
-    // Use claude-haiku-4 (cheap model) for planning — matches PEV cost model
-    let client = Arc::new(anthropic::Client::new(&cfg.anthropic_api_key));
+    // Haiku is the cheapest model — chosen deliberately to minimise cost for
+    // the planning phase per the PEV cost model.
+    let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let planner = client
-        .agent("claude-haiku-4-5") // cheap model for planning
+        .agent("claude-haiku-4-5")
         .preamble(PLAN_PREAMBLE)
         .build();
 
@@ -67,7 +64,7 @@ pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<Trad
     let response = planner.prompt(&prompt).await?;
     debug!(raw = %response, "[PLAN] Raw LLM response");
 
-    // Strip any accidental markdown fences before parsing
+    // Strip any accidental Markdown code fences before parsing.
     let cleaned = response
         .trim()
         .trim_start_matches("```json")
@@ -76,7 +73,6 @@ pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<Trad
         .trim();
 
     let tasks: Vec<TradeTask> = serde_json::from_str(cleaned).unwrap_or_else(|_| {
-        // Fallback: construct default tasks if LLM response is malformed
         tracing::warn!("[PLAN] LLM response could not be parsed; using default tasks");
         default_tasks(pair, amount)
     });
@@ -87,17 +83,18 @@ pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<Trad
 
 /// Public alias for [`default_tasks`], exposed for integration tests.
 ///
-/// Produces the canonical four-task breakdown for any pair and amount without
-/// making any LLM call.
+/// Returns the canonical four-task breakdown for any pair and amount without
+/// making any LLM network call, making it suitable for unit and integration
+/// tests that do not require a live API key.
 pub fn default_tasks_pub(pair: &str, amount: f64) -> Vec<TradeTask> {
     default_tasks(pair, amount)
 }
 
-/// Construct a deterministic set of four [`TradeTask`] objects.
+/// Construct a deterministic four-task breakdown for the given pair and amount.
 ///
-/// Used as a fallback when the LLM response cannot be parsed, and directly by
-/// tests via [`default_tasks_pub`].  Covers the full trade lifecycle:
-/// analyse → route → slippage → execute.
+/// Called as a fallback when [`decompose`] cannot parse the LLM response, and
+/// directly by tests via [`default_tasks_pub`]. The four tasks cover the
+/// complete trade lifecycle: analyse → route → slippage check → execution.
 fn default_tasks(pair: &str, amount: f64) -> Vec<TradeTask> {
     vec![
         TradeTask {

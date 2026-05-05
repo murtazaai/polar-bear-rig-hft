@@ -1,15 +1,16 @@
-//! AVM execution layer: JIT-compilation benchmark vs standard EVM.
-//! Reactor GUI simulation: audit log showing contract state before/after.
 //! AVM (Agave Virtual Machine) execution layer.
 //!
-//! Contains two sub-modules:
+//! Polar Bear Systems — Technology Lead: Murtaza Ali Imtiaz
+//!
+//! Contains two sub-modules that together demonstrate the performance and
+//! auditability story of the Agave runtime inside the HFT platform:
 //!
 //! * [`benchmark`] — micro-benchmark comparing AVM JIT-compiled execution
-//!   against EVM bytecode-style interpretation.  Demonstrates the ~8–12×
+//!   against EVM bytecode-style interpretation, demonstrating the ~8–12×
 //!   throughput advantage of the Agave runtime.
-//! * [`reactor`] — Reactor GUI audit-log simulation.  Emits a structured
-//!   before/after log of a smart contract deployment to give operators a
-//!   human-readable execution trace.
+//! * [`reactor`] — Reactor GUI audit-log simulation, emitting a structured
+//!   before/after log of a smart contract deployment so operators get a
+//!   human-readable, per-trade execution trace.
 //!
 //! ## Public API
 //!
@@ -30,8 +31,8 @@ use anyhow::Result;
 ///
 /// # Errors
 ///
-/// Currently infallible; returns `Ok(())`.  The signature uses `Result` for
-/// forward-compatibility with real AVM instrumentation.
+/// Currently infallible; returns `Ok(())`. The signature uses [`Result`] for
+/// forward-compatibility with real AVM instrumentation hooks.
 pub fn run_benchmark() -> Result<()> {
     benchmark::run()
 }
@@ -42,6 +43,11 @@ pub fn run_benchmark() -> Result<()> {
 /// the output is visible in the default tracing subscriber configuration.
 ///
 /// Delegates to [`reactor::emit_audit_log`].
+///
+/// # Arguments
+///
+/// * `route` — The SOR-selected execution venue and price quote.
+/// * `swap`  — The completed swap result from the Jupiter simulation.
 ///
 /// # Errors
 ///

@@ -1,11 +1,12 @@
-//! polar-bear-rig-hft — CLI entry point.
+//! `polar-bear-rig-hft` — CLI entry point.
 //!
-//! Polar Bear Systems | Technology Lead: Murtaza Ali Imtiaz
+//! **Polar Bear Systems** | Technology Lead: Murtaza Ali Imtiaz
+//!
 //! Platform: Rig (Rust Inference Gateway / ARC) · AVM · SignerContext · PEV Loop
 //!
 //! ## Usage
 //!
-//! ```bash
+//! ```text
 //! # Full pipeline (default)
 //! cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
 //!
@@ -16,7 +17,7 @@
 //! cargo run --release -- --mode reactor
 //! ```
 //!
-//! Set `ANTHROPIC_API_KEY` in `.env` or the environment before running.
+//! Set `ANTHROPIC_API_KEY` in `.env` or the shell environment before running.
 
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
@@ -28,7 +29,7 @@ use polar_bear_rig_hft::{avm, config, onchain, pev, sor};
 /// CLI operating mode — selects which subsystem(s) to exercise.
 #[derive(Debug, Clone, ValueEnum)]
 enum Mode {
-    /// Run the full pipeline: PEV → SOR → OnChain swap → AVM audit log.
+    /// Run the full pipeline: PEV → SOR → on-chain swap → AVM audit log.
     Full,
     /// Run only the PEV loop (Plan → Execute → Verify) via rig-core.
     Pev,
@@ -40,20 +41,20 @@ enum Mode {
     Reactor,
 }
 
-/// CLI arguments parsed by `clap`.
+/// CLI arguments parsed by [`clap`].
 #[derive(Parser, Debug)]
 #[command(name = "polar-bear-rig-hft")]
 #[command(about = "Optimal HFT platform using Rig (ARC) — Polar Bear Systems")]
 struct Args {
-    /// Operating mode (default: full).
+    /// Operating mode (default: `full`).
     #[arg(short, long, default_value = "full")]
     mode: Mode,
 
-    /// Enable live on-chain transactions.  Defaults to dry-run.
+    /// Enable live on-chain transactions. Omit to stay in dry-run mode.
     #[arg(long, default_value_t = false)]
     live: bool,
 
-    /// Trading pair passed to SOR and PEV (e.g. `SOL/USDC`).
+    /// Trading pair forwarded to SOR and PEV (e.g. `SOL/USDC`).
     #[arg(short, long, default_value = "SOL/USDC")]
     pair: String,
 
@@ -67,7 +68,8 @@ async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::from_default_env().add_directive("polar_bear_rig_hft=debug".parse()?),
+            EnvFilter::from_default_env()
+                .add_directive("polar_bear_rig_hft=debug".parse()?),
         )
         .init();
 
@@ -92,7 +94,7 @@ async fn main() -> Result<()> {
                   fee_bps = route.fee_bps, latency_ms = route.latency_ms,
                   "SOR: best route selected");
 
-            // 3. On-chain execution (dry-run unless --live)
+            // 3. On-chain execution (dry-run unless --live was passed)
             let swap_result = onchain::execute_swap(&cfg, &route, args.live).await?;
             info!(tx_sig = %swap_result.simulated_sig, "Swap simulation complete");
 

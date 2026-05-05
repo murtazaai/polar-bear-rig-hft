@@ -1,8 +1,8 @@
-//! Shared on-chain types — stub for future implementation.
+//! Shared on-chain newtypes and enums — stub for future implementation.
 //!
-//! Intended to hold common newtypes and enums used across the `onchain`
-//! sub-modules, for example:
+//! Intended to hold common types used across the `onchain` sub-modules, for
+//! example:
 //!
-//! * `Lamports(u64)` — type-safe wrapper around the native SOL unit.
-//! * `TokenAmount` — SPL token amount with decimal handling.
-//! * `TxStatus` — outcome of a confirmed transaction.
+//! * `Lamports(u64)` — type-safe wrapper around the native SOL denomination.
+//! * `TokenAmount` — SPL token amount with decimal-place handling.
+//! * `TxStatus` — outcome enum for a confirmed transaction.

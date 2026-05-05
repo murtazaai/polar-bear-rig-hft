@@ -1,15 +1,16 @@
-//! Integration tests for the AVM benchmark module.
+//! Integration test for the AVM execution benchmark.
+//!
+//! Verifies that [`polar_bear_rig_hft::avm::run_benchmark`] completes without
+//! panicking or returning an error. The test does not assert on the numeric
+//! speedup ratio because that depends on hardware and scheduler state.
 
-#[cfg(test)]
-mod tests {
-    /// Benchmark must complete without panicking and log a positive speedup.
-    #[test]
-    fn test_benchmark_runs_without_error() {
-        let result = polar_bear_rig_hft::avm::run_benchmark();
-        assert!(
-            result.is_ok(),
-            "AVM benchmark should not fail: {:?}",
-            result
-        );
-    }
+/// `run_benchmark` must complete successfully on all platforms.
+#[test]
+fn test_benchmark_completes_without_error() {
+    let result = polar_bear_rig_hft::avm::run_benchmark();
+    assert!(
+        result.is_ok(),
+        "AVM benchmark returned an unexpected error: {:?}",
+        result
+    );
 }

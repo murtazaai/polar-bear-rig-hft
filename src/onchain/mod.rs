@@ -1,11 +1,12 @@
 //! On-chain execution layer.
 //!
-//! Exposes two public entry points:
+//! Exposes two public entry points consumed by [`crate::main`]:
 //!
 //! * [`execute_swap`] — wraps a Jupiter swap simulation inside an isolated
-//!   [`signer::LocalSolanaSigner`] context and returns the [`jupiter::SwapResult`].
+//!   [`signer::LocalSolanaSigner`] context and returns a
+//!   [`jupiter::SwapResult`].
 //! * [`demo_signer`] — spawns three concurrent tasks to demonstrate that
-//!   [`signer::CURRENT_SIGNER`] is fully isolated per task.
+//!   the task-local signer storage is fully isolated per task.
 //!
 //! ## Security boundary
 //!
@@ -31,20 +32,29 @@ use jupiter::SwapResult;
 ///
 /// Loads a [`signer::LocalSolanaSigner`] from the environment, logs the
 /// public key, then runs the Jupiter simulation inside [`signer::with_signer`]
-/// to ensure the keypair is scoped to this task only.
+/// to guarantee the keypair is scoped to this task only.
 ///
-/// The `live` flag is inverted before being passed to [`jupiter::simulate_swap`]
-/// because the swap function takes `dry_run` (the logical complement).
+/// The `live` flag is inverted before being passed to
+/// [`jupiter::simulate_swap`] because that function's parameter is named
+/// `dry_run` — the logical complement of `live`.
+///
+/// # Arguments
+///
+/// * `cfg`   — Runtime configuration (provides the RPC URL and dry-run flag).
+/// * `route` — The SOR-selected venue and price quote to execute against.
+/// * `live`  — `true` to attempt a real transaction; `false` (default) for
+///   dry-run simulation.
 ///
 /// # Errors
 ///
-/// Returns an error if the signer context or Jupiter simulation fails.
+/// Returns `Err` if the signer context setup or the Jupiter simulation fails.
 pub async fn execute_swap(cfg: &Config, route: &Route, live: bool) -> Result<SwapResult> {
+    let _ = cfg; // reserved for future RPC client construction
     let signer = signer::LocalSolanaSigner::from_env();
     let pubkey = signer.pubkey();
     info!(%pubkey, "[ONCHAIN] SignerContext: signer loaded");
 
-    // Wrap all on-chain operations in SignerContext for thread-local isolation
+    // Wrap all on-chain operations in SignerContext for task-local isolation.
     signer::with_signer(signer, || async {
         let result = jupiter::simulate_swap(route, 1.0, !live).await?;
         Ok(result)
@@ -52,9 +62,18 @@ pub async fn execute_swap(cfg: &Config, route: &Route, live: bool) -> Result<Swa
     .await
 }
 
-/// Demonstrate [`signer::with_signer`] isolation across concurrent tasks.
+/// Demonstrate [`signer::with_signer`] isolation across three concurrent tasks.
 ///
 /// Delegates directly to [`signer::demo_signer`].
+///
+/// # Arguments
+///
+/// * `cfg` — Runtime configuration (reserved for future credential loading).
+///
+/// # Errors
+///
+/// Returns `Err` if any spawned task panics or its [`tokio::task::JoinHandle`]
+/// fails.
 pub async fn demo_signer(cfg: &Config) -> Result<()> {
     signer::demo_signer(cfg).await
 }

@@ -29,4 +29,7 @@
 12. Fix: Changed the reqwest feature to rustls. rustls is also pulled in automatically via the default feature set (default → default-tls → rustls), so never needed to be explicit, we can just write features = ["json"] and TLS comes for free. Keept it explicit as "rustls" made the intent clear.
     Root Cause: `reqwest` with feature `rustls-tls` but `reqwest` does not have that feature.  In reqwest 0.13 the feature was renamed: rustls-tls → rustls.
 13. Rust Doc comments added.
-14. To be continued.
+14. Fix: Rust Doc Comments Syntax and Semantics corrected.
+15. Fix: The Arc was also unnecessary, client consumed immediately by .agent().preamble().build() in the very next line and never shared across tasks, so removed it has no effect on behaviour. The use std::sync::Arc; import was also removed from all three files to keep them warning-free.
+    Root Cause: In rig-core 0.36, anthropic::Client::new(&key) was made fallible, it now returns Result<Client<AnthropicExt>, Error> rather than a bare Client. The code was wrapping the call in Arc::new(...), which produced Arc<Result<…>>. Rust's method resolution couldn't find .agent() on that type, hence the E0599.
+16. To be continued.
