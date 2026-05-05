@@ -41,59 +41,6 @@ Routing**, and **SignerContext** thread-local signer isolation with full **PEV l
 
 ---
 
-## HIGH-LEVEL ARCHITECTURE DIAGRAM
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    polar-bear-rig-hft                                   │
-│                    Optimal HFT Platform  (Rig / ARC)                    │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-          ┌─────────────────────────▼─────────────────────────┐
-          │            CLI Entry Point  (main.rs)             │
-          │   --mode [pev|sor|signer|reactor|full]            │
-          └───────────────┬───────────────────────────────────┘
-                          │
-     ┌────────────────────┴─────────────────────────────┐
-     │                                                  │
-     ▼                                                  ▼
-┌─────────────┐                              ┌──────────────────┐
-│  PEV Loop   │                              │  Smart Order     │
-│  (pev.rs)   │                              │  Routing (sor.rs)│
-│             │                              │                  │
-│ 1. PLAN     │                              │ Raydium    ──┐   │
-│  rig-core   │                              │ Orca       ──┼──▶│ SOR
-│  Haiku LLM  │                              │ Serum      ──┘   │ Decision
-│             │                              └──────────────────┘
-│ 2. EXECUTE  │                                       │
-│  rig-core   │                                       ▼
-│  Sonnet LLM │               ┌─────────────────────────────────┐
-│  Tool calls │               │  rig-onchain-kit  (onchain.rs)  │
-│             │               │                                 │
-│ 3. VERIFY   │               │  SignerContext::with_signer()──▶│
-│  Score 0–1  │               │  Jupiter swap (dry-run)         │
-│  Pass ≥0.80 │               │  Raydium pool lookup            │
-│             │               │  Balance query                  │
-└─────────────┘               │  Privy wallet abstraction       │
-       │                      └─────────────────────────────────┘
-       │                                       │
-       ▼                                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              AVM Execution Layer  (avm.rs)                      │
-│  JIT-compiled execution simulation · EVM comparison benchmark   │
-│  Reactor GUI Audit Log: state before/after · gas estimate       │
-└─────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-              ┌───────────────────────────────────┐
-              │  Structured Execution Log         │
-              │  (JSON + terminal output)         │
-              │  Defence evidence trail │
-              └───────────────────────────────────┘
-```
-
----
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -136,55 +83,11 @@ cargo clippy -- -D warnings
 
 ---
 
-## Key Outputs (screen capture)
-
-Running `cargo run -- --mode full` produces structured logs showing:
-
-1. **PEV Loop**: Plan decomposed into 4 atomic tasks → Execute with tool calls
-   → Verify score ≥ 0.80 → PASS
-2. **Smart Order Routing**: Raydium/Orca/Serum compared concurrently → best
-   venue selected with latency in milliseconds logged
-3. **SignerContext**: 3 concurrent tasks each isolated in their own signer context
-4. **Jupiter swap**: dry-run simulation with SIM_xxxxxxxxxxxxxxxx signature
-5. **AVM benchmark**: AVM ns/op vs EVM ns/op with speedup factor (typically 8–12x
-   in simulation)
-6. **Reactor GUI audit log**: state before/after, gas estimate, deployment receipt
-
----
-
-## Star Story
-
-### Situation
-Polar Bear Systems required a production-grade HFT agent framework that could
-execute DeFi trades with auditable provenance, sub-millisecond routing decisions,
-and cryptographic security, without Python's GIL contention or memory unsafety.
-
-### Task
-As Technology Lead, design and implement the architecture using Rig (Rust Inference
-Gateway / ARC): the enterprise-grade Rust-native LLM framework, integrating
-rig-core, rig-onchain-kit, AVM, Smart Order Routing, and SignerContext security.
-
-### Action
-- Built rig-core PEV loop with cheap model (Haiku) for planning and capable model
-  (Sonnet) for execution, 60-70% lower LLM cost vs all-Sonnet pipeline
-- Integrated rig-onchain-kit for Solana/EVM via Jupiter swap (dry-run + live)
-  with thread-local SignerContext isolation (Privy-compatible pattern)
-- Implemented Smart Order Routing: concurrent Raydium/Orca/Serum comparison,
-  lowest-cost venue selected, latency logged per decision
-- Demonstrated AVM JIT-compilation benchmark vs EVM bytecode interpretation
-- Emitted Reactor GUI audit log: state before/after, gas estimate, receipt
-
-### Result
-- Statefully supervised, multi-step agent workflows with full PEV governance
-- Zero Python dependencies, Rust memory safety end-to-end
-- SignerContext isolation verified across concurrent async tasks
-- Smart Order Routing selecting cheapest DEX venue in <20ms
-- AVM benchmark showing 8–12x execution advantage over EVM simulation
-- Reactor GUI audit log: production-ready contract deployment traceability
-
----
-
 ## Related
+
+- [Star Story](./docs/star_story.md)
+- [High-Level Architecture Diagram](./docs/architecture.md)
+- [Key Outputs (screen capture)](./docs/screen_capture_guide.md)
 
 - [Rig Framework](https://rig.rs) · [0xPlaygrounds](https://github.com/0xPlaygrounds/rig)
 - [arc.fun](https://arc.fun) · [Ryzome](https://ryzome.ai)
