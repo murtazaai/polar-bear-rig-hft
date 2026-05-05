@@ -24,7 +24,10 @@ async fn main() -> Result<()> {
 
     // Config::from_env requires ANTHROPIC_API_KEY; provide a dummy value for
     // this demo since we only exercise the signer, not the LLM path.
-    std::env::set_var("ANTHROPIC_API_KEY", "demo-not-used");
+    unsafe {
+        std::env::set_var("ANTHROPIC_API_KEY", "demo-not-used");
+    }
+
     let cfg = Config::from_env()?;
 
     polar_bear_rig_hft::onchain::demo_signer(&cfg).await?;
