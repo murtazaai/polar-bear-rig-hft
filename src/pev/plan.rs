@@ -11,11 +11,16 @@
 //!
 //! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
 //! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
-//!   omitting it causes `E0599: no method named 'agent'` even though the type
-//!   implements the trait.
+//! - [`rig::client::ProviderClient`] — required by the rig provider-client pattern;
+//!   omitting either causes `E0599: no method named 'agent'` even though the type
+//!   implements both traits.
 
 use anyhow::Result;
-use rig::{client::CompletionClient, completion::Prompt, providers::anthropic};
+use rig::{
+    client::{CompletionClient, ProviderClient},
+    completion::Prompt,
+    providers::anthropic,
+};
 use tracing::{debug, info};
 
 use super::types::TradeTask;

@@ -45,3 +45,21 @@
     };
     ```
     Files: src/pev/plan.rs, src/pev/execute.rs, src/pev/verify.rs
+18. Fix: Added `rig::client::ProviderClient` to both the module-level `//!` doc bullet list
+    and the actual `use` import statement in all three PEV phase files.
+    Root Cause: Fix 17 expanded the `use rig::{...}` import to the multi-line form and
+    confirmed `CompletionClient` was present, but `ProviderClient` was absent from both the
+    module-level documentation bullet list and the `use` statement. The module docs stated
+    "both traits" in prose but listed only one trait in the bullet items, giving a misleading
+    impression that `CompletionClient` alone was sufficient. At runtime in rig-core 0.36+ the
+    provider-client construction pattern requires `ProviderClient` to also be in scope via a
+    `use` item — documentation mentions have no effect on method resolution. The canonical
+    multi-line import matching all official rig 0.36 examples is:
+    ```rust
+    use rig::{
+        client::{CompletionClient, ProviderClient},
+        completion::Prompt,
+        providers::anthropic,
+    };
+    ```
+    Files: src/pev/plan.rs, src/pev/execute.rs, src/pev/verify.rs
