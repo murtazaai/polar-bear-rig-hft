@@ -86,7 +86,7 @@ RUSTDOCFLAGS="--cfg docsrs" cargo doc # with docsrs conditional items
 
 - **Edition**: Rust 2024
 - **Max line width**: 100 characters (enforced by `rustfmt.toml`)
-- **Imports**: `use rig::client::CompletionClient` — both traits are
+- **Imports**: `use rig::client::CompletionClient` - both traits are
   required to call `.agent()` on any rig-core 0.36+ Anthropic client
 - **Doc comments**: `//!` for module-level docs; `///` for items; never `///` or `/** */`
   on macro invocation sites (triggers `unused_doc_comments`)
@@ -110,9 +110,9 @@ RUSTDOCFLAGS="--cfg docsrs" cargo doc # with docsrs conditional items
 
 The CI pipeline (`.github/workflows/ci.yml`) runs on every push and pull request:
 
-1. `rustfmt --check` — enforces code style
-2. `clippy -D warnings` — enforces lint rules
-3. `cargo build --release` — ensures the release binary compiles
-4. `cargo test --workspace` — runs all deterministic tests
-5. `cargo doc` — ensures documentation compiles without warnings
+1. `rustfmt --check` - enforces code style
+2. `clippy -D warnings` - enforces lint rules
+3. `cargo build --release` - ensures the release binary compiles
+4. `cargo test --workspace` - runs all deterministic tests
+5. `cargo doc` - ensures documentation compiles without warnings
 6. MSRV check against Rust 1.85.0

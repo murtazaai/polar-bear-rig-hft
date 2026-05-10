@@ -1,6 +1,6 @@
 //! # polar-bear-rig-hft
 //!
-//! **Polar Bear Systems** — Optimal HFT agent framework built on
+//! **Polar Bear Systems** - Optimal HFT agent framework built on
 //! [Rig (ARC)](https://rig.rs).
 //!
 //! Technology Lead: Murtaza Ali Imtiaz (July 2019 – present).
@@ -24,16 +24,16 @@
 //!
 //! ## Full pipeline
 //!
-//! 1. **PEV loop** ([`pev`]) — Haiku decomposes the trade into four
+//! 1. **PEV loop** ([`pev`]) - Haiku decomposes the trade into four
 //!    [`pev::types::TradeTask`] objects; Sonnet executes each one using tool
 //!    calls; Haiku verifies the output (pass ≥ 0.80). Up to two retries on
 //!    failure.
-//! 2. **SOR** ([`sor`]) — Raydium, Orca, and Serum are queried concurrently;
+//! 2. **SOR** ([`sor`]) - Raydium, Orca, and Serum are queried concurrently;
 //!    the lowest cost-adjusted venue wins.
-//! 3. **On-chain** ([`onchain`]) — Jupiter swap is simulated (dry-run by
+//! 3. **On-chain** ([`onchain`]) - Jupiter swap is simulated (dry-run by
 //!    default) inside an isolated [`onchain::signer::LocalSolanaSigner`]
 //!    context.
-//! 4. **AVM audit** ([`avm`]) — Reactor GUI audit log records state-before,
+//! 4. **AVM audit** ([`avm`]) - Reactor GUI audit log records state-before,
 //!    execution details, and state-after for every swap.
 //!
 //! ## Quick start

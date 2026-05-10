@@ -1,4 +1,4 @@
-//! Raydium CLMM venue adapter — stub awaiting SDK integration.
+//! Raydium CLMM venue adapter - stub awaiting SDK integration.
 //!
 //! The live query logic currently lives in [`crate::sor::router`].
 //! Once the `raydium-sdk` dependency is added to `Cargo.toml`, move the

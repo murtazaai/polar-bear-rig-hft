@@ -1,4 +1,4 @@
-//! SignerContext — task-local keypair isolation for secure on-chain operations.
+//! SignerContext - task-local keypair isolation for secure on-chain operations.
 //!
 //! Implements the security boundary described in the `rig-onchain-kit`
 //! documentation: every async on-chain call must be wrapped in
@@ -30,7 +30,7 @@ use crate::config::Config;
 
 // Task-local slot that holds the active signer for the current Tokio task.
 // Declared with a regular line comment rather than a doc comment (///)
-// because `tokio::task_local!` is a macro invocation — rustdoc cannot attach
+// because `tokio::task_local!` is a macro invocation - rustdoc cannot attach
 // outer doc attributes to macro call sites, which would trigger the
 // `unused_doc_comments` lint.
 tokio::task_local! {
@@ -88,9 +88,9 @@ impl LocalSolanaSigner {
 ///
 /// # Type parameters
 ///
-/// * `F`   — A [`FnOnce`] closure that produces a future.
-/// * `Fut` — The [`Future`][std::future::Future] returned by `F`.
-/// * `T`   — The `Ok` type of the future's output.
+/// * `F`   - A [`FnOnce`] closure that produces a future.
+/// * `Fut` - The [`Future`][std::future::Future] returned by `F`.
+/// * `T`   - The `Ok` type of the future's output.
 ///
 /// # Errors
 ///
@@ -127,7 +127,7 @@ where
 ///
 /// # Arguments
 ///
-/// * `_cfg` — Runtime configuration (reserved for future credential loading;
+/// * `_cfg` - Runtime configuration (reserved for future credential loading;
 ///   currently unused).
 ///
 /// # Errors
@@ -145,7 +145,7 @@ pub async fn demo_signer(_cfg: &Config) -> Result<()> {
                 with_signer(signer, || async move {
                     info!(task = i, %pubkey, "[SIGNER] Task running in isolated context");
                     tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-                    info!(task = i, "[SIGNER] Task complete — signer isolated");
+                    info!(task = i, "[SIGNER] Task complete - signer isolated");
                     Ok::<(), anyhow::Error>(())
                 })
                 .await

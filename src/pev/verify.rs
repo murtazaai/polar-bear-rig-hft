@@ -1,4 +1,4 @@
-//! VERIFY phase — output scoring via a cheap LLM.
+//! VERIFY phase - output scoring via a cheap LLM.
 //!
 //! Uses `claude-haiku-4-5` to score each [`types::ExecuteOutput`] against the
 //! acceptance criteria of the originating [`types::TradeTask`]. The model must
@@ -15,8 +15,8 @@
 //! ## Rig client trait requirements (rig-core ≥ 0.36)
 //!
 //! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
-//! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] — required by the rig provider-client pattern;
+//! - [`rig::client::CompletionClient`] - provides the `.agent()` builder method.
+//! - [`rig::client::ProviderClient`] - required by the rig provider-client pattern;
 //!   omitting either causes `E0599: no method named 'agent'` even though the type
 //!   implements both traits.
 
@@ -63,16 +63,16 @@ struct VerifyResponse {
 ///
 /// # Arguments
 ///
-/// * `cfg`    — Runtime configuration; provides the Anthropic API key.
-/// * `task`   — The task whose `acceptance_criteria` drive the scoring prompt.
-/// * `output` — The result produced by the [`crate::pev::execute`] phase.
+/// * `cfg`    - Runtime configuration; provides the Anthropic API key.
+/// * `task`   - The task whose `acceptance_criteria` drive the scoring prompt.
+/// * `output` - The result produced by the [`crate::pev::execute`] phase.
 ///
 /// # Returns
 ///
 /// A tuple `(score, feedback, passed)` where:
-/// * `score`    — Float in `[0.00, 1.00]`.
-/// * `feedback` — One-sentence explanation from the verifier.
-/// * `passed`   — `true` when `score >= PASS_THRESHOLD`.
+/// * `score`    - Float in `[0.00, 1.00]`.
+/// * `feedback` - One-sentence explanation from the verifier.
+/// * `passed`   - `true` when `score >= PASS_THRESHOLD`.
 ///
 /// # Errors
 ///
@@ -83,10 +83,10 @@ pub async fn score(
     task: &TradeTask,
     output: &ExecuteOutput,
 ) -> Result<(f64, String, bool)> {
-    // Client::new is fallible in rig-core 0.36+ — unwrap with `?`.
+    // Client::new is fallible in rig-core 0.36+ - unwrap with `?`.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let verifier = client
-        .agent("claude-haiku-4-5") // cheap model — verification is low-complexity
+        .agent("claude-haiku-4-5") // cheap model - verification is low-complexity
         .preamble(VERIFY_PREAMBLE)
         .build();
 

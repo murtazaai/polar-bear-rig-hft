@@ -4,11 +4,11 @@
 //! Reactor GUI deployed by Polar Bear Systems for smart contract deployments.
 //! The log captures three sequential phases:
 //!
-//! 1. **STATE BEFORE** — wallet balance and AMM pool conditions prior to
+//! 1. **STATE BEFORE** - wallet balance and AMM pool conditions prior to
 //!    execution.
-//! 2. **EXECUTION** — method called, compute-unit estimate, AVM JIT mode, and
+//! 2. **EXECUTION** - method called, compute-unit estimate, AVM JIT mode, and
 //!    transaction signature.
-//! 3. **STATE AFTER** — resulting balance, tokens received, fee paid, and
+//! 3. **STATE AFTER** - resulting balance, tokens received, fee paid, and
 //!    final status.
 //!
 //! In production this module would write to a persistent audit store (e.g. a
@@ -26,8 +26,8 @@ use tracing::info;
 ///
 /// # Arguments
 ///
-/// * `route` — The SOR-selected execution venue and price quote.
-/// * `swap`  — The result returned by the Jupiter swap simulation.
+/// * `route` - The SOR-selected execution venue and price quote.
+/// * `swap`  - The result returned by the Jupiter swap simulation.
 ///
 /// # Errors
 ///

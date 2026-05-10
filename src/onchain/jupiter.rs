@@ -23,7 +23,7 @@ use tracing::info;
 
 use crate::sor::router::Route;
 
-/// The result of a Jupiter swap — real or simulated.
+/// The result of a Jupiter swap - real or simulated.
 #[derive(Debug, Clone)]
 pub struct SwapResult {
     /// Transaction signature on the Solana network.
@@ -48,15 +48,15 @@ pub struct SwapResult {
 
 /// Simulate (or execute live) a Jupiter swap for the given route and amount.
 ///
-/// In dry-run mode the function is purely computational — no network call is
+/// In dry-run mode the function is purely computational - no network call is
 /// made and no transaction is signed. In live mode the function returns `Err`
 /// because real transaction signing is not implemented in this demo build.
 ///
 /// # Arguments
 ///
-/// * `route`   — The SOR-selected venue (venue name, effective price, fee).
-/// * `amount`  — Base-token amount to swap.
-/// * `dry_run` — `true` to simulate only; `false` to attempt a live
+/// * `route`   - The SOR-selected venue (venue name, effective price, fee).
+/// * `amount`  - Base-token amount to swap.
+/// * `dry_run` - `true` to simulate only; `false` to attempt a live
 ///   transaction (currently unimplemented in this demo).
 ///
 /// # Errors

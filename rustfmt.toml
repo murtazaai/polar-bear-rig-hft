@@ -1,4 +1,4 @@
-# polar-bear-rig-hft — rustfmt configuration
+# polar-bear-rig-hft - rustfmt configuration
 # Mirrors the style used in the rig upstream repository.
 
 edition            = "2024"

@@ -1,7 +1,7 @@
-# polar-bear-rig-hft — Clippy configuration
+# polar-bear-rig-hft - Clippy configuration
 # Mirrors the style used in the rig upstream repository.
 
-# Minimum Supported Rust Version — keep in sync with Cargo.toml rust-version.
+# Minimum Supported Rust Version - keep in sync with Cargo.toml rust-version.
 msrv = " 1.85.0"
 
 # Cognitive complexity threshold for the cognitive_complexity lint.

@@ -1,4 +1,4 @@
-//! `polar-bear-rig-hft` — CLI entry point.
+//! `polar-bear-rig-hft` - CLI entry point.
 //!
 //! **Polar Bear Systems** | Technology Lead: Murtaza Ali Imtiaz
 //!
@@ -26,7 +26,7 @@ use tracing_subscriber::EnvFilter;
 
 use polar_bear_rig_hft::{avm, config, onchain, pev, sor};
 
-/// CLI operating mode — selects which subsystem(s) to exercise.
+/// CLI operating mode - selects which subsystem(s) to exercise.
 #[derive(Debug, Clone, ValueEnum)]
 enum Mode {
     /// Run the full pipeline: PEV → SOR → on-chain swap → AVM audit log.
@@ -44,7 +44,7 @@ enum Mode {
 /// CLI arguments parsed by [`clap`].
 #[derive(Parser, Debug)]
 #[command(name = "polar-bear-rig-hft")]
-#[command(about = "Optimal HFT platform using Rig (ARC) — Polar Bear Systems")]
+#[command(about = "Optimal HFT platform using Rig (ARC) - Polar Bear Systems")]
 struct Args {
     /// Operating mode (default: `full`).
     #[arg(short, long, default_value = "full")]
@@ -68,8 +68,7 @@ async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::from_default_env()
-                .add_directive("polar_bear_rig_hft=debug".parse()?),
+            EnvFilter::from_default_env().add_directive("polar_bear_rig_hft=debug".parse()?),
         )
         .init();
 
@@ -84,11 +83,11 @@ async fn main() -> Result<()> {
 
     match args.mode {
         Mode::Full => {
-            // 1. PEV loop — plan and reason about the trade
+            // 1. PEV loop - plan and reason about the trade
             let pev_result = pev::run(&cfg, &args.pair, args.amount).await?;
             info!(score = pev_result.verify_score, "PEV loop complete");
 
-            // 2. Smart Order Routing — find best execution venue
+            // 2. Smart Order Routing - find best execution venue
             let route = sor::best_route(&args.pair, args.amount).await?;
             info!(venue = %route.venue, price = route.effective_price,
                   fee_bps = route.fee_bps, latency_ms = route.latency_ms,

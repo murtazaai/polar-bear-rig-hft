@@ -1,19 +1,19 @@
-//! EXECUTE phase — agentic task execution via Sonnet.
+//! EXECUTE phase - agentic task execution via Sonnet.
 //!
 //! Each [`types::TradeTask`] is handed to a `claude-sonnet-4-6` agent that
 //! reasons step-by-step and invokes the appropriate tool. Tool calls are
 //! simulated in this demo; in production they would be real `rig-core`
 //! [`rig::tool::Tool`] implementations backed by live market data APIs.
 //!
-//! Sonnet is the most capable — and most expensive — model in the PEV
+//! Sonnet is the most capable - and most expensive - model in the PEV
 //! pipeline. It is deliberately confined to the Execute phase only; Plan and
 //! Verify use Haiku to keep overall LLM costs down.
 //!
 //! ## Rig client trait requirements (rig-core ≥ 0.36)
 //!
 //! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
-//! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] — required by the rig provider-client pattern;
+//! - [`rig::client::CompletionClient`] - provides the `.agent()` builder method.
+//! - [`rig::client::ProviderClient`] - required by the rig provider-client pattern;
 //!   omitting either causes `E0599: no method named 'agent'` even though the type
 //!   implements both traits.
 
@@ -47,8 +47,8 @@ Think step-by-step. Call the appropriate tool. Return a concise result string.
 ///
 /// # Arguments
 ///
-/// * `cfg`  — Runtime configuration; provides the Anthropic API key.
-/// * `task` — The atomic task to execute.
+/// * `cfg`  - Runtime configuration; provides the Anthropic API key.
+/// * `task` - The atomic task to execute.
 ///
 /// # Errors
 ///
@@ -57,7 +57,7 @@ Think step-by-step. Call the appropriate tool. Return a concise result string.
 pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
     info!(task_id = %task.id, action = ?task.action, "[EXECUTE] Running task");
 
-    // Client::new is fallible in rig-core 0.36+ — unwrap with `?`.
+    // Client::new is fallible in rig-core 0.36+ - unwrap with `?`.
     // Sonnet is chosen for the Execute phase: best reasoning + tool-use capability.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let executor = client

@@ -1,4 +1,4 @@
-//! Core SOR logic — concurrent venue queries and cost-adjusted ranking.
+//! Core SOR logic - concurrent venue queries and cost-adjusted ranking.
 //!
 //! [`best_route`] fans out to three venue adapters in parallel using
 //! [`tokio::join!`], collects the successful results, sorts them by
@@ -9,7 +9,7 @@ use anyhow::Result;
 use std::time::Instant;
 use tracing::info;
 
-/// A price quote from a single DEX venue — the core output of a venue query.
+/// A price quote from a single DEX venue - the core output of a venue query.
 ///
 /// Returned by each venue adapter and compared by [`best_route`] to select
 /// the optimal execution path.
@@ -44,13 +44,13 @@ pub struct Route {
 ///
 /// # Arguments
 ///
-/// * `pair`   — Trading pair, e.g. `"SOL/USDC"`.
-/// * `amount` — Base-token amount (passed to venue adapters for slippage
+/// * `pair`   - Trading pair, e.g. `"SOL/USDC"`.
+/// * `amount` - Base-token amount (passed to venue adapters for slippage
 ///   estimation in production; informational in this demo).
 ///
 /// # Errors
 ///
-/// Currently infallible — failures from individual venue adapters are absorbed
+/// Currently infallible - failures from individual venue adapters are absorbed
 /// and the fallback route is used if all adapters fail.
 pub async fn best_route(pair: &str, amount: f64) -> Result<Route> {
     info!(pair, amount, "[SOR] Starting route comparison");
@@ -63,9 +63,15 @@ pub async fn best_route(pair: &str, amount: f64) -> Result<Route> {
     );
 
     let mut candidates = vec![];
-    if let Ok(r) = raydium { candidates.push(r); }
-    if let Ok(r) = orca    { candidates.push(r); }
-    if let Ok(r) = serum   { candidates.push(r); }
+    if let Ok(r) = raydium {
+        candidates.push(r);
+    }
+    if let Ok(r) = orca {
+        candidates.push(r);
+    }
+    if let Ok(r) = serum {
+        candidates.push(r);
+    }
 
     // Sort ascending by effective cost so `next()` yields the cheapest venue.
     candidates.sort_by(|a, b| {

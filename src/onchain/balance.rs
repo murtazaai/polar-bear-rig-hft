@@ -1,4 +1,4 @@
-//! On-chain balance queries — stub for future implementation.
+//! On-chain balance queries - stub for future implementation.
 //!
 //! In production this module will expose helpers such as:
 //!

@@ -1,4 +1,4 @@
-//! PEV Loop — Plan → Execute → Verify.
+//! PEV Loop - Plan → Execute → Verify.
 //!
 //! Orchestrates the three-phase agentic workflow that governs every trade
 //! decision in the Polar Bear Systems HFT platform:
@@ -51,9 +51,9 @@ pub const MAX_RETRIES: u32 = 2;
 ///
 /// # Arguments
 ///
-/// * `cfg`    — Runtime configuration (API keys, RPC URL, dry-run flag).
-/// * `pair`   — Trading pair, e.g. `"SOL/USDC"`.
-/// * `amount` — Base-token amount to trade.
+/// * `cfg`    - Runtime configuration (API keys, RPC URL, dry-run flag).
+/// * `pair`   - Trading pair, e.g. `"SOL/USDC"`.
+/// * `amount` - Base-token amount to trade.
 ///
 /// # Errors
 ///
@@ -91,7 +91,7 @@ pub async fn run(cfg: &Config, pair: &str, amount: f64) -> Result<PEVResult> {
             total_retries += 1;
             if retries > MAX_RETRIES {
                 warn!(task_id = %task.id, score, %feedback,
-                      "[VERIFY] FAIL — max retries reached");
+                      "[VERIFY] FAIL - max retries reached");
                 final_score = score;
                 final_feedback = feedback.clone();
                 outputs.push(output);
@@ -99,7 +99,7 @@ pub async fn run(cfg: &Config, pair: &str, amount: f64) -> Result<PEVResult> {
             }
 
             warn!(task_id = %task.id, score, retry = retries,
-                  "[VERIFY] FAIL — retrying with error context injected");
+                  "[VERIFY] FAIL - retrying with error context injected");
         }
     }
 

@@ -53,7 +53,7 @@
     "both traits" in prose but listed only one trait in the bullet items, giving a misleading
     impression that `CompletionClient` alone was sufficient. At runtime in rig-core 0.36+ the
     provider-client construction pattern requires `ProviderClient` to also be in scope via a
-    `use` item — documentation mentions have no effect on method resolution. The canonical
+    `use` item - documentation mentions have no effect on method resolution. The canonical
     multi-line import matching all official rig 0.36 examples is:
     ```rust
     use rig::{

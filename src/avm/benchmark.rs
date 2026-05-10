@@ -9,7 +9,7 @@
 //! | EVM (bytecode)  | `#[inline(never)]`, heap allocation per call | ~10–30 ns/op |
 //!
 //! The heap allocation in [`evm_execute_simulated`] models the cost of
-//! fetching and decoding EVM bytecode from memory on every iteration — a
+//! fetching and decoding EVM bytecode from memory on every iteration - a
 //! realistic representation of interpreter dispatch overhead.
 //!
 //! > **Note:** This is a *synthetic* benchmark. Real AVM vs EVM numbers will
@@ -49,7 +49,7 @@ pub fn run() -> anyhow::Result<()> {
         avm_ns_per_op = avm_ns,
         evm_ns_per_op = evm_ns,
         speedup_factor = format!("{:.1}x", speedup),
-        "[AVM] Benchmark complete — AVM is {:.1}x faster than EVM",
+        "[AVM] Benchmark complete - AVM is {:.1}x faster than EVM",
         speedup
     );
 

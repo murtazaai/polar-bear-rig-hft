@@ -80,7 +80,7 @@ polar-bear-rig-hft/
 │   ├── test_signer_context.rs SignerContext isolation, Jupiter dry-run
 │   ├── test_avm_benchmark.rs  Benchmark smoke test
 │   │
-│   └── providers/             Live provider tests — gated behind #[ignore]
+│   └── providers/             Live provider tests - gated behind #[ignore]
 │       └── anthropic.rs       Requires ANTHROPIC_API_KEY; run with --ignored
 ```
 

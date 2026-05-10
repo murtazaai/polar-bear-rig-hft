@@ -1,4 +1,4 @@
-//! PLAN phase — trade decomposition via a cheap LLM.
+//! PLAN phase - trade decomposition via a cheap LLM.
 //!
 //! Uses `claude-haiku-4-5` (the lowest-cost Anthropic model) to decompose a
 //! high-level trade request into exactly four atomic [`types::TradeTask`]
@@ -10,8 +10,8 @@
 //! ## Rig client trait requirements (rig-core ≥ 0.36)
 //!
 //! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
-//! - [`rig::client::CompletionClient`] — provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] — required by the rig provider-client pattern;
+//! - [`rig::client::CompletionClient`] - provides the `.agent()` builder method.
+//! - [`rig::client::ProviderClient`] - required by the rig provider-client pattern;
 //!   omitting either causes `E0599: no method named 'agent'` even though the type
 //!   implements both traits.
 
@@ -48,9 +48,9 @@ simulate_execution.
 ///
 /// # Arguments
 ///
-/// * `cfg`    — Runtime config; provides the Anthropic API key.
-/// * `pair`   — Trading pair string, e.g. `"SOL/USDC"`.
-/// * `amount` — Base-token amount to trade.
+/// * `cfg`    - Runtime config; provides the Anthropic API key.
+/// * `pair`   - Trading pair string, e.g. `"SOL/USDC"`.
+/// * `amount` - Base-token amount to trade.
 ///
 /// # Errors
 ///
@@ -60,7 +60,7 @@ simulate_execution.
 pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<TradeTask>> {
     info!(pair, amount, "[PLAN] Decomposing trade task");
 
-    // Client::new is fallible in rig-core 0.36+ — unwrap with `?`.
+    // Client::new is fallible in rig-core 0.36+ - unwrap with `?`.
     // Haiku is chosen deliberately: cheapest model per the PEV cost model.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let planner = client

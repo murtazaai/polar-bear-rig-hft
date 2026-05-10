@@ -2,10 +2,10 @@
 //!
 //! Exposes two public entry points consumed by [`crate::main`]:
 //!
-//! * [`execute_swap`] — wraps a Jupiter swap simulation inside an isolated
+//! * [`execute_swap`] - wraps a Jupiter swap simulation inside an isolated
 //!   [`signer::LocalSolanaSigner`] context and returns a
 //!   [`jupiter::SwapResult`].
-//! * [`demo_signer`] — spawns three concurrent tasks to demonstrate that
+//! * [`demo_signer`] - spawns three concurrent tasks to demonstrate that
 //!   the task-local signer storage is fully isolated per task.
 //!
 //! ## Security boundary
@@ -36,13 +36,13 @@ use jupiter::SwapResult;
 ///
 /// The `live` flag is inverted before being passed to
 /// [`jupiter::simulate_swap`] because that function's parameter is named
-/// `dry_run` — the logical complement of `live`.
+/// `dry_run` - the logical complement of `live`.
 ///
 /// # Arguments
 ///
-/// * `cfg`   — Runtime configuration (provides the RPC URL and dry-run flag).
-/// * `route` — The SOR-selected venue and price quote to execute against.
-/// * `live`  — `true` to attempt a real transaction; `false` (default) for
+/// * `cfg`   - Runtime configuration (provides the RPC URL and dry-run flag).
+/// * `route` - The SOR-selected venue and price quote to execute against.
+/// * `live`  - `true` to attempt a real transaction; `false` (default) for
 ///   dry-run simulation.
 ///
 /// # Errors
@@ -68,7 +68,7 @@ pub async fn execute_swap(cfg: &Config, route: &Route, live: bool) -> Result<Swa
 ///
 /// # Arguments
 ///
-/// * `cfg` — Runtime configuration (reserved for future credential loading).
+/// * `cfg` - Runtime configuration (reserved for future credential loading).
 ///
 /// # Errors
 ///

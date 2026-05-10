@@ -8,7 +8,7 @@
 //!
 //! | Variable | Required | Default |
 //! |---|---|---|
-//! | `ANTHROPIC_API_KEY` | ✅ | — |
+//! | `ANTHROPIC_API_KEY` | ✅ | - |
 //! | `SOLANA_RPC_URL` | ❌ | `https://api.devnet.solana.com` |
 //! | `SOLANA_PRIVATE_KEY` | ❌ | `DEMO_KEY_PLACEHOLDER` |
 //! | `DRY_RUN` | ❌ | `true` |
@@ -18,7 +18,7 @@ use anyhow::{Context, Result};
 /// Global runtime configuration for the HFT platform.
 ///
 /// Constructed once at startup and shared by reference across all subsystems.
-/// Cloning is cheap — all fields are either `String` or `bool`.
+/// Cloning is cheap - all fields are either `String` or `bool`.
 #[derive(Debug, Clone)]
 pub struct Config {
     /// Anthropic API key forwarded to every `rig-core` client.
