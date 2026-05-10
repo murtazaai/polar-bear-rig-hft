@@ -47,6 +47,6 @@
               ┌───────────────────────────────────┐
               │  Structured Execution Log         │
               │  (JSON + terminal output)         │
-              │  Defence evidence trail │
+              │  Defence trail │
               └───────────────────────────────────┘
 ```
