@@ -34,8 +34,14 @@ async fn main() -> Result<()> {
     println!("│  Jupiter Dry-Run Result                  │");
     println!("├──────────────────────────────────────────┤");
     println!("│  Signature:  {}  │", swap.simulated_sig);
-    println!("│  Input:      {:.6} SOL                  │", swap.input_amount);
-    println!("│  Output:     {:.4} USDC                 │", swap.output_amount);
+    println!(
+        "│  Input:      {:.6} SOL                  │",
+        swap.input_amount
+    );
+    println!(
+        "│  Output:     {:.4} USDC                 │",
+        swap.output_amount
+    );
     println!("│  Fee:        {:.6} SOL                  │", swap.fee_paid);
     println!("│  Dry run:    {:?}                     │", swap.is_dry_run);
     println!("└──────────────────────────────────────────┘");

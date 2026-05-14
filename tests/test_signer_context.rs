@@ -7,7 +7,7 @@
 
 use polar_bear_rig_hft::onchain::{
     jupiter,
-    signer::{with_signer, LocalSolanaSigner},
+    signer::{LocalSolanaSigner, with_signer},
 };
 use polar_bear_rig_hft::sor::router::Route;
 

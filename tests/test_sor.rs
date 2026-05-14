@@ -41,7 +41,10 @@ async fn test_sor_latency_recorded() {
     let route = polar_bear_rig_hft::sor::best_route("SOL/USDC", 1.0)
         .await
         .unwrap();
-    assert!(route.latency_ms > 0, "latency must be measured and non-zero");
+    assert!(
+        route.latency_ms > 0,
+        "latency must be measured and non-zero"
+    );
 }
 
 /// Lower fee at the same nominal price yields a lower effective cost.
