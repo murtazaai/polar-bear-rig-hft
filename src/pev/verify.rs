@@ -95,7 +95,7 @@ pub async fn score(
         task.acceptance_criteria, output.result
     );
 
-    let raw = verifier.prompt(&prompt).await?;
+    let raw: String = verifier.prompt(&prompt).await?;
     let cleaned = raw
         .trim()
         .trim_start_matches("```json")

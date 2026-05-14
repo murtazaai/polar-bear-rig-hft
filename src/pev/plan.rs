@@ -73,7 +73,7 @@ pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<Trad
          Return JSON array only."
     );
 
-    let response = planner.prompt(&prompt).await?;
+    let response: String = planner.prompt(&prompt).await?;
     debug!(raw = %response, "[PLAN] Raw LLM response");
 
     // Strip any accidental Markdown code fences before parsing.

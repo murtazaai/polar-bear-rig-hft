@@ -71,7 +71,7 @@ pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
         task.id, task.action, task.pair, task.amount, task.acceptance_criteria
     );
 
-    let response = executor.prompt(&prompt).await?;
+    let response: String = executor.prompt(&prompt).await?;
     debug!(raw = %response, task_id = %task.id, "[EXECUTE] Raw response");
 
     // Map each action to its canonical tool call for the audit log.
