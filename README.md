@@ -93,3 +93,19 @@ cargo clippy -- -D warnings
 - [arc.fun](https://arc.fun) · [Ryzome](https://ryzome.ai)
 - [Solana Program Library](https://spl.solana.com/)
 - [Jupiter](https://jup.ag/) · [Raydium](https://raydium.io/)
+
+---
+
+## 📝 License
+
+PBS License: [PBS License](./LICENSE-PBS)
+
+---
+
+## 👤 Author
+
+**Murtaza Ali Imtiaz**
+
+- LinkedIn: [LinkedIn](https://linkedin.com/in/murtazai)
+- GitHub: [@murtazaai](https://github.com/murtazaai)
+- Portfolio: [murtazai.com](https://murtazai.com)
