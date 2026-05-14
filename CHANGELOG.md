@@ -25,7 +25,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the multi-line form `use rig::{ client::CompletionClient` (Fix 17).
   Fix 16 documented both traits in module-level `//!` comments but only `CompletionClient` was
   present in the actual `use` statement; `CompletionClient` must be *imported*, not just mentioned.
-- `Cargo.toml` - upgraded to Rust **2024 edition**; added `rust-version = "1.85.0"`,
+- `Cargo.toml` - upgraded to Rust **2024 edition**; added `rust-version = "1.93.1"`,
   `[package.metadata.docs.rs]`, and `[lints]` tables; removed unused `futures` dependency;
   aligned `thiserror` to `^2`; added `strip = "debuginfo"` to release profile
 - `src/pev/{plan,execute,verify}.rs` - added `rig::client::CompletionClient` to imports;

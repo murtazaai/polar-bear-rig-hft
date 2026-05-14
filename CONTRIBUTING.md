@@ -12,7 +12,7 @@
 
 | Tool | Version | Install |
 |---|---|---|
-| Rust stable toolchain | ≥ 1.85.0 | `rustup update stable` |
+| Rust stable toolchain | ≥ 1.93.1 | `rustup update stable` |
 | `rustfmt` | (with toolchain) | `rustup component add rustfmt` |
 | `clippy` | (with toolchain) | `rustup component add clippy` |
 
@@ -115,4 +115,4 @@ The CI pipeline (`.github/workflows/ci.yml`) runs on every push and pull request
 3. `cargo build --release` - ensures the release binary compiles
 4. `cargo test --workspace` - runs all deterministic tests
 5. `cargo doc` - ensures documentation compiles without warnings
-6. MSRV check against Rust 1.85.0
+6. MSRV check against Rust 1.93.1

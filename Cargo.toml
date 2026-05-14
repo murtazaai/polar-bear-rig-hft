@@ -2,7 +2,7 @@
 name        = "polar-bear-rig-hft"
 version     = "0.1.0"
 edition     = "2024"
-rust-version = "1.85.0"
+rust-version = "1.93.1"
 description = "Optimal HFT platform using Rig (Rust Inference Gateway / ARC)"
 repository  = "https://github.com/murtazaai/polar-bear-rig-hft"
 license     = "License-PBS"
