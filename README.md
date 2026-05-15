@@ -96,13 +96,13 @@ cargo clippy -- -D warnings
 
 ---
 
-## 📝 License
+## License
 
 PBS License: [PBS License](./LICENSE-PBS)
 
 ---
 
-## 👤 Author
+## Author
 
 **Murtaza Ali Imtiaz**
 
