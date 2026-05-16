@@ -55,7 +55,7 @@ Routing**, and **SignerContext** thread-local signer isolation with full **PEV l
 
 ---
 
-## Simple Build
+## Quick Start
 
 ```bash
 # Prerequisites: Rust stable (rustup.rs)
@@ -83,7 +83,7 @@ cargo clippy -- -D warnings
 
 ---
 
-## Complete Test and Build
+## Complete Build and Test
 
 ---
 
