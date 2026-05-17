@@ -2,7 +2,7 @@
 
 **Optimal High-Frequency Trading Platform using Rig (Rust Inference Gateway / ARC)**
 
-> Technology Lead: Murtaza Ali Imtiaz · Polar Bear Systems · July 2019–Present
+> Built by **[Murtaza Ali Imtiaz](https://github.com/murtazaai)** · Technology Lead · Polar Bear Systems · July 2019–Present
 
 A production-grade Rust implementation of an HFT agent framework powered by
 [Rig (ARC)](https://rig.rs), the high-performance, enterprise-alternative to
