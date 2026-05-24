@@ -75,10 +75,10 @@ cp .env.example .env
 # Build
 cargo build --release
 
-# Run full pipeline — offline stub mode (no API key needed)
+# Run full pipeline - offline stub mode (no API key needed)
 cargo run --release -- --mode full --skip-llm
 
-# Run full pipeline — live LLM mode (requires ANTHROPIC_API_KEY)
+# Run full pipeline - live LLM mode (requires ANTHROPIC_API_KEY)
 cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
 
 # Run individual subsystems (never need an API key)
@@ -98,7 +98,7 @@ cargo clippy -- -D warnings
 Every subsystem runs without an `ANTHROPIC_API_KEY`. The PEV loop falls back
 to deterministic offline stubs when no key is available.
 
-Stub mode is activated by **any** of the following — whichever is most
+Stub mode is activated by **any** of the following - whichever is most
 convenient for your workflow:
 
 | Method | When to use |
@@ -108,11 +108,11 @@ convenient for your workflow:
 | `cargo run -- --mode full --skip-llm` | Force stub via CLI flag |
 | `SKIP_LLM=1` set in `.env` | Always-on for a whole project checkout |
 
-> **Important — `cargo test`:** the `--skip-llm` flag belongs to the compiled
+> **Important - `cargo test`:** the `--skip-llm` flag belongs to the compiled
 > binary's clap parser. Never pass it after `--` in a `cargo test` invocation:
 >
 > ```text
-> cargo test -- --skip-llm   # ✗ WRONG — test harness rejects it
+> cargo test -- --skip-llm   # ✗ WRONG - test harness rejects it
 > SKIP_LLM=1 cargo test      # ✓ correct
 > ```
 >
@@ -132,7 +132,7 @@ convenient for your workflow:
 | Rust stable | >= 1.93.1 (MSRV) | `rustup update stable` |
 | `rustfmt` | bundled | `rustup component add rustfmt` |
 | `clippy` | bundled | `rustup component add clippy` |
-| `ANTHROPIC_API_KEY` | — | Only needed for live PEV modes and `#[ignore]` tests |
+| `ANTHROPIC_API_KEY` | - | Only needed for live PEV modes and `#[ignore]` tests |
 
 ---
 
@@ -142,7 +142,7 @@ convenient for your workflow:
 git clone https://github.com/murtazaai/polar-bear-rig-hft
 cd polar-bear-rig-hft
 cp .env.example .env
-# Edit .env — set ANTHROPIC_API_KEY=sk-ant-... for live LLM execution,
+# Edit .env - set ANTHROPIC_API_KEY=sk-ant-... for live LLM execution,
 # or leave blank to run in offline stub mode.
 ```
 
@@ -153,7 +153,7 @@ cp .env.example .env
 ```text
 cargo clean                  # remove target/ directory
 cargo build                  # debug build
-cargo build --release        # optimised — required for meaningful benchmark timing
+cargo build --release        # optimised - required for meaningful benchmark timing
 cargo check                  # type-check only; no linking
 ```
 
@@ -197,7 +197,7 @@ Use `--test-threads=1` to avoid concurrent API calls hitting rate limits.
 
 ### Full test inventory
 
-#### `tests/test_pev_loop.rs` — unit + stub integration, no API key
+#### `tests/test_pev_loop.rs` - unit + stub integration, no API key
 
 | Test | Asserts |
 |---|---|
@@ -212,7 +212,7 @@ Use `--test-threads=1` to avoid concurrent API calls hitting rate limits.
 | `test_trade_task_serialization` | JSON round-trip preserves pair and action |
 | `test_execute_output_tool_calls` | `tool_calls` is non-empty and references correct tool |
 
-#### `tests/test_sor.rs` — async integration, no API key
+#### `tests/test_sor.rs` - async integration, no API key
 
 | Test | Asserts |
 |---|---|
@@ -220,20 +220,20 @@ Use `--test-threads=1` to avoid concurrent API calls hitting rate limits.
 | `test_sor_latency_recorded` | `latency_ms > 0` |
 | `test_cost_ordering_lower_fee_wins` | lower fee\_bps yields lower effective cost |
 
-#### `tests/test_signer_context.rs` — async integration, no API key
+#### `tests/test_signer_context.rs` - async integration, no API key
 
 | Test | Asserts |
 |---|---|
 | `test_signer_context_isolation` | two concurrent tasks hold independent signers; no error |
 | `test_jupiter_dry_run_returns_simulated_sig` | `is_dry_run=true`, sig starts with `SIM_`, output > 0 |
 
-#### `tests/test_avm_benchmark.rs` — unit, no API key
+#### `tests/test_avm_benchmark.rs` - unit, no API key
 
 | Test | Asserts |
 |---|---|
 | `test_benchmark_completes_without_error` | `run_benchmark()` returns `Ok(())` |
 
-#### `tests/providers/anthropic.rs` — live, `#[ignore]`
+#### `tests/providers/anthropic.rs` - live, `#[ignore]`
 
 | Test | Asserts |
 |---|---|
@@ -257,10 +257,10 @@ RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc   # CI docs check
 ### Running the binary
 
 ```text
-# Full pipeline — offline stub (no API key needed)
+# Full pipeline - offline stub (no API key needed)
 cargo run --release -- --mode full --skip-llm --pair SOL/USDC --amount 1.0
 
-# Full pipeline — live LLM (requires ANTHROPIC_API_KEY)
+# Full pipeline - live LLM (requires ANTHROPIC_API_KEY)
 cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
 
 # Individual subsystems (never need an API key)
