@@ -7,17 +7,23 @@
 //! ## Usage
 //!
 //! ```text
-//! # Full pipeline (default)
+//! # Full pipeline (default) - requires ANTHROPIC_API_KEY
 //! cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
 //!
-//! # Individual subsystems
-//! cargo run --release -- --mode pev
+//! # Full pipeline in offline/stub mode - no API key needed
+//! cargo run --release -- --mode full --skip-llm
+//!
+//! # Subsystems that never need an API key
 //! cargo run --release -- --mode sor
 //! cargo run --release -- --mode signer
 //! cargo run --release -- --mode reactor
+//!
+//! # PEV only, stub mode
+//! cargo run --release -- --mode pev --skip-llm
 //! ```
 //!
-//! Set `ANTHROPIC_API_KEY` in `.env` or the shell environment before running.
+//! Set `ANTHROPIC_API_KEY` in `.env` or the shell for live LLM execution.
+//! Omit it (or pass `--skip-llm`) to run every subsystem in offline/stub mode.
 
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
@@ -33,11 +39,11 @@ enum Mode {
     Full,
     /// Run only the PEV loop (Plan → Execute → Verify) via rig-core.
     Pev,
-    /// Run only the Smart Order Routing venue comparison.
+    /// Run only the Smart Order Routing venue comparison.  No API key needed.
     Sor,
-    /// Run only the `SignerContext` isolation demo.
+    /// Run only the `SignerContext` isolation demo.  No API key needed.
     Signer,
-    /// Run only the AVM benchmark and Reactor GUI audit log.
+    /// Run only the AVM benchmark and Reactor GUI audit log.  No API key needed.
     Reactor,
 }
 
@@ -50,7 +56,14 @@ struct Args {
     #[arg(short, long, default_value = "full")]
     mode: Mode,
 
-    /// Enable live on-chain transactions. Omit to stay in dry-run mode.
+    /// Skip all LLM calls and use offline stubs for the PEV phases.
+    ///
+    /// Implied automatically when `ANTHROPIC_API_KEY` is absent.
+    /// Pass this flag explicitly to force stub mode even when a key is set.
+    #[arg(long, default_value_t = false)]
+    skip_llm: bool,
+
+    /// Enable live on-chain transactions.  Omit to stay in dry-run mode.
     #[arg(long, default_value_t = false)]
     live: bool,
 
@@ -73,25 +86,46 @@ async fn main() -> Result<()> {
         .init();
 
     let args = Args::parse();
-    let cfg = config::Config::from_env()?;
+
+    // Build config; skip_llm is already true when the key is absent,
+    // but the CLI flag can force it on even when a key exists.
+    let mut cfg = config::Config::from_env()?;
+    if args.skip_llm {
+        cfg.skip_llm = true;
+    }
 
     info!("╔══════════════════════════════════════════════╗");
     info!("║  POLAR BEAR RIG HFT  ·  Rig (ARC) Platform  ║");
     info!("╚══════════════════════════════════════════════╝");
-    info!(mode = ?args.mode, pair = %args.pair, amount = args.amount,
-          live = args.live, "Starting platform");
+    info!(
+        mode = ?args.mode,
+        pair = %args.pair,
+        amount = args.amount,
+        live = args.live,
+        skip_llm = cfg.skip_llm,
+        "Starting platform"
+    );
+
+    if cfg.skip_llm {
+        info!("⚠  LLM stub mode active - PEV phases will use offline stubs.");
+        info!("   Set ANTHROPIC_API_KEY or omit --skip-llm for live LLM execution.");
+    }
 
     match args.mode {
         Mode::Full => {
-            // 1. PEV loop - plan and reason about the trade
+            // 1. PEV loop - uses stub when skip_llm is true
             let pev_result = pev::run(&cfg, &args.pair, args.amount).await?;
             info!(score = pev_result.verify_score, "PEV loop complete");
 
-            // 2. Smart Order Routing - find best execution venue
+            // 2. Smart Order Routing - always live (no API key needed)
             let route = sor::best_route(&args.pair, args.amount).await?;
-            info!(venue = %route.venue, price = route.effective_price,
-                  fee_bps = route.fee_bps, latency_ms = route.latency_ms,
-                  "SOR: best route selected");
+            info!(
+                venue = %route.venue,
+                price = route.effective_price,
+                fee_bps = route.fee_bps,
+                latency_ms = route.latency_ms,
+                "SOR: best route selected"
+            );
 
             // 3. On-chain execution (dry-run unless --live was passed)
             let swap_result = onchain::execute_swap(&cfg, &route, args.live).await?;

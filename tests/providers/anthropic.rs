@@ -1,25 +1,32 @@
 //! Live Anthropic integration tests - require a real `ANTHROPIC_API_KEY`.
 //!
-//! These tests are marked `#[ignore]` and will **not** run in CI. Run them
-//! manually when you have a key and want to verify live LLM connectivity:
+//! These tests are marked `#[ignore]` and will **not** run in `cargo test`.
+//! Run them manually when you have a key and want to verify live LLM connectivity:
 //!
 //! ```text
 //! ANTHROPIC_API_KEY=sk-ant-... cargo test --test providers -- --ignored --test-threads=1
 //! ```
 //!
 //! Use `--test-threads=1` to avoid concurrent API calls hitting rate limits.
+//!
+//! Note: `test_live_sor_returns_known_venue` was previously here but has been
+//! moved to `tests/test_sor.rs` because it does not require an API key.
 
-use polar_bear_rig_hft::{config::Config, pev, sor};
+use polar_bear_rig_hft::{config::Config, pev};
 
 /// Verify that the PEV plan phase successfully decomposes a trade via Haiku.
 ///
-/// Checks that exactly four tasks are returned and that every task id follows
-/// the `T00N` convention.
+/// Checks that exactly four tasks are returned and that every task carries the
+/// original pair and amount.
 #[tokio::test]
 #[ignore = "requires ANTHROPIC_API_KEY - run with: cargo test --test providers -- --ignored"]
 async fn test_live_plan_decomposes_four_tasks() {
     dotenvy::dotenv().ok();
-    let cfg = Config::from_env().expect("ANTHROPIC_API_KEY must be set");
+    let cfg = Config::from_env().expect("Config::from_env should not fail");
+    assert!(
+        cfg.has_api_key(),
+        "ANTHROPIC_API_KEY must be set to run live tests"
+    );
 
     let tasks = pev::plan::decompose(&cfg, "SOL/USDC", 1.0)
         .await
@@ -42,7 +49,11 @@ async fn test_live_plan_decomposes_four_tasks() {
 #[ignore = "requires ANTHROPIC_API_KEY - run with: cargo test --test providers -- --ignored"]
 async fn test_live_pev_loop_passes() {
     dotenvy::dotenv().ok();
-    let cfg = Config::from_env().expect("ANTHROPIC_API_KEY must be set");
+    let cfg = Config::from_env().expect("Config::from_env should not fail");
+    assert!(
+        cfg.has_api_key(),
+        "ANTHROPIC_API_KEY must be set to run live tests"
+    );
 
     let result = pev::run(&cfg, "SOL/USDC", 1.0)
         .await
@@ -57,20 +68,5 @@ async fn test_live_pev_loop_passes() {
         result.verify_score >= pev::verify::PASS_THRESHOLD,
         "verify_score must be >= {PASS}",
         PASS = pev::verify::PASS_THRESHOLD,
-    );
-}
-
-/// Verify that SOR returns a real venue name (smoke test - no LLM needed).
-#[tokio::test]
-#[ignore = "requires ANTHROPIC_API_KEY - run with: cargo test --test providers -- --ignored"]
-async fn test_live_sor_returns_known_venue() {
-    let route = sor::best_route("SOL/USDC", 1.0)
-        .await
-        .expect("sor::best_route should never error");
-
-    assert!(
-        ["Raydium", "Orca", "Serum"].contains(&route.venue.as_str()),
-        "Unexpected venue: {}",
-        route.venue
     );
 }

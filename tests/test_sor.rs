@@ -3,6 +3,8 @@
 //! Verifies that [`polar_bear_rig_hft::sor::best_route`] returns a valid venue,
 //! that the cost-ordering logic selects the cheapest option, and that wall-clock
 //! latency is measured.
+//!
+//! None of these tests require `ANTHROPIC_API_KEY`.
 
 use polar_bear_rig_hft::sor::router::Route;
 
@@ -21,6 +23,8 @@ fn make_route(venue: &str, price: f64, fee_bps: u16) -> Route {
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 /// `best_route` must return one of the three known DEX venues.
+///
+/// This test does NOT require `ANTHROPIC_API_KEY`.
 #[tokio::test]
 async fn test_best_route_returns_known_venue() {
     let route = polar_bear_rig_hft::sor::best_route("SOL/USDC", 1.0)

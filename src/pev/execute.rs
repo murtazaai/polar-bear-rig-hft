@@ -1,12 +1,16 @@
 //! EXECUTE phase - agentic task execution via Sonnet.
 //!
 //! Each `types::TradeTask` is handed to a `claude-sonnet-4-6` agent that
-//! reasons step-by-step and invokes the appropriate tool. Tool calls are
+//! reasons step-by-step and invokes the appropriate tool.  Tool calls are
 //! simulated in this demo; in production they would be real `rig-core`
 //! [`rig::tool::Tool`] implementations backed by live market data APIs.
 //!
+//! When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true` (no
+//! API key or `--skip-llm` flag), the function returns a deterministic stub
+//! [`ExecuteOutput`] without any network call.
+//!
 //! Sonnet is the most capable - and most expensive - model in the PEV
-//! pipeline. It is deliberately confined to the Execute phase only; Plan and
+//! pipeline.  It is deliberately confined to the Execute phase only; Plan and
 //! Verify use Haiku to keep overall LLM costs down.
 //!
 //! ## Rig client trait requirements (rig-core ≥ 0.36)
@@ -42,13 +46,16 @@ Think step-by-step. Call the appropriate tool. Return a concise result string.
 
 /// Execute a single [`TradeTask`] using the Sonnet agent.
 ///
-/// Builds a structured prompt from the task fields, sends it to
+/// When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true`
+/// returns a deterministic stub output immediately with no network call.
+///
+/// Otherwise builds a structured prompt from the task fields, sends it to
 /// `claude-sonnet-4-6`, and maps the [`TradeAction`] variant to a list of
 /// simulated tool-call names for the audit log.
 ///
 /// # Arguments
 ///
-/// * `cfg`  - Runtime configuration; provides the Anthropic API key.
+/// * `cfg`  - Runtime configuration; provides the Anthropic API key and `skip_llm`.
 /// * `task` - The atomic task to execute.
 ///
 /// # Errors
@@ -58,6 +65,13 @@ Think step-by-step. Call the appropriate tool. Return a concise result string.
 pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
     info!(task_id = %task.id, action = ?task.action, "[EXECUTE] Running task");
 
+    // ── Stub path ─────────────────────────────────────────────────────────
+    if cfg.skip_llm {
+        info!(task_id = %task.id, "[EXECUTE] skip_llm=true - returning stub output");
+        return Ok(stub_output(task));
+    }
+
+    // ── Live LLM path ─────────────────────────────────────────────────────
     // Client::new is fallible in rig-core 0.36+ - unwrap with `?`.
     // Sonnet is chosen for the Execute phase: best reasoning + tool-use capability.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
@@ -77,15 +91,7 @@ pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
 
     // Map each action to its canonical tool call for the audit log.
     // In production these would be real rig::tool::Tool invocations.
-    let tool_calls = match task.action {
-        TradeAction::AnalyseMarket => vec!["fetch_price_feed(SOL/USDC)".into()],
-        TradeAction::SelectRoute => {
-            vec!["query_raydium_pool()".into(), "query_orca_pool()".into()]
-        }
-        TradeAction::ValidateSlippage => vec!["calculate_slippage(amount)".into()],
-        TradeAction::SimulateExecution => vec!["jupiter_swap_dry_run()".into()],
-    };
-
+    let tool_calls = action_tool_calls(&task.action);
     for tool in &tool_calls {
         info!(tool = %tool, "[EXECUTE] Tool called");
     }
@@ -97,4 +103,37 @@ pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
         reasoning: response,
         tool_calls,
     })
+}
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+/// Build a deterministic stub [`ExecuteOutput`] for offline/no-key runs.
+fn stub_output(task: &TradeTask) -> ExecuteOutput {
+    let result = format!(
+        "[STUB] Task {} ({:?}) executed offline. Pair: {}, Amount: {}",
+        task.id, task.action, task.pair, task.amount
+    );
+    let tool_calls = action_tool_calls(&task.action);
+    for tool in &tool_calls {
+        info!(tool = %tool, "[EXECUTE] Tool called (stub)");
+    }
+    ExecuteOutput {
+        task_id: task.id.clone(),
+        result: result.clone(),
+        confidence: 0.90,
+        reasoning: result,
+        tool_calls,
+    }
+}
+
+/// Map a [`TradeAction`] to its canonical tool-call name(s).
+fn action_tool_calls(action: &TradeAction) -> Vec<String> {
+    match action {
+        TradeAction::AnalyseMarket => vec!["fetch_price_feed(SOL/USDC)".into()],
+        TradeAction::SelectRoute => {
+            vec!["query_raydium_pool()".into(), "query_orca_pool()".into()]
+        }
+        TradeAction::ValidateSlippage => vec!["calculate_slippage(amount)".into()],
+        TradeAction::SimulateExecution => vec!["jupiter_swap_dry_run()".into()],
+    }
 }

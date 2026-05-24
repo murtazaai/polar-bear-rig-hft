@@ -1,9 +1,11 @@
-//! Integration tests for the PEV loop types, default task decomposition, and
-//! the verify pass threshold constant.
+//! Integration tests for the PEV loop types, default task decomposition, stub
+//! execution paths, and the verify pass threshold constant.
 //!
-//! These tests do **not** make any LLM API calls; they exercise only the
-//! deterministic, pure-Rust code paths.
+//! None of these tests make any LLM API calls; they exercise only the
+//! deterministic, pure-Rust code paths.  They pass with or without
+//! `ANTHROPIC_API_KEY` in the environment.
 
+use polar_bear_rig_hft::config::Config;
 use polar_bear_rig_hft::pev::types::{ExecuteOutput, TradeAction, TradeTask};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -28,7 +30,118 @@ fn make_output(result: &str) -> ExecuteOutput {
     }
 }
 
-// ── tests ─────────────────────────────────────────────────────────────────────
+/// Build a [`Config`] with `skip_llm` forced on, suitable for tests that must
+/// not make any network calls regardless of the environment.
+fn offline_config() -> Config {
+    let mut cfg = Config::from_env().expect("Config::from_env must not fail");
+    cfg.skip_llm = true;
+    cfg
+}
+
+// ── Config tests ──────────────────────────────────────────────────────────────
+
+/// `Config::from_env` must succeed even when `ANTHROPIC_API_KEY` is absent.
+#[test]
+fn test_config_from_env_succeeds_without_key() {
+    // We don't clear the var here because other tests may run in parallel and
+    // share the environment.  Instead we verify the function itself is infallible
+    // and that skip_llm is consistent with has_api_key().
+    let cfg = Config::from_env().expect("Config::from_env must not return Err");
+    // skip_llm must be true when there is no key.
+    assert_eq!(
+        cfg.skip_llm,
+        !cfg.has_api_key(),
+        "skip_llm must be the logical inverse of has_api_key() \
+         when SKIP_LLM env var is not set"
+    );
+}
+
+/// `has_api_key()` must return `false` when the key is empty.
+#[test]
+fn test_config_has_api_key_empty() {
+    let cfg = Config {
+        anthropic_api_key: String::new(),
+        skip_llm: true,
+        solana_rpc_url: "https://api.devnet.solana.com".into(),
+        solana_private_key: "DEMO".into(),
+        dry_run: true,
+    };
+    assert!(
+        !cfg.has_api_key(),
+        "empty key → has_api_key() must be false"
+    );
+}
+
+/// `has_api_key()` must return `true` when the key is non-empty.
+#[test]
+fn test_config_has_api_key_present() {
+    let cfg = Config {
+        anthropic_api_key: "sk-ant-test".into(),
+        skip_llm: false,
+        solana_rpc_url: "https://api.devnet.solana.com".into(),
+        solana_private_key: "DEMO".into(),
+        dry_run: true,
+    };
+    assert!(
+        cfg.has_api_key(),
+        "non-empty key → has_api_key() must be true"
+    );
+}
+
+// ── PEV stub-mode tests ───────────────────────────────────────────────────────
+
+/// The full PEV loop must complete in stub mode (`skip_llm=true`) without any
+/// network call and return a passing score.
+#[tokio::test]
+async fn test_pev_run_stub_mode_passes() {
+    let cfg = offline_config();
+    let result = polar_bear_rig_hft::pev::run(&cfg, "SOL/USDC", 1.0)
+        .await
+        .expect("pev::run must not fail in stub mode");
+    assert!(
+        result.passed,
+        "stub-mode PEV must return passed=true; score={:.2}",
+        result.verify_score
+    );
+    assert_eq!(result.tasks.len(), 4, "stub mode must produce 4 tasks");
+    assert_eq!(result.outputs.len(), 4, "stub mode must produce 4 outputs");
+}
+
+/// `plan::decompose` must return default tasks immediately in stub mode.
+#[tokio::test]
+async fn test_plan_decompose_stub_mode() {
+    let cfg = offline_config();
+    let tasks = polar_bear_rig_hft::pev::plan::decompose(&cfg, "SOL/USDC", 2.5)
+        .await
+        .expect("plan::decompose must not fail in stub mode");
+    assert_eq!(tasks.len(), 4, "stub decompose must return 4 tasks");
+    assert!(
+        tasks.iter().all(|t| (t.amount - 2.5).abs() < f64::EPSILON),
+        "stub tasks must preserve the amount"
+    );
+}
+
+/// `verify::score` must return a passing stub score in stub mode.
+#[tokio::test]
+async fn test_verify_score_stub_mode() {
+    let cfg = offline_config();
+    let task = make_task();
+    let output = make_output("any result");
+    let (score, feedback, passed) = polar_bear_rig_hft::pev::verify::score(&cfg, &task, &output)
+        .await
+        .expect("verify::score must not fail in stub mode");
+    assert!(passed, "stub verify must pass");
+    assert!(
+        score >= polar_bear_rig_hft::pev::verify::PASS_THRESHOLD,
+        "stub score must be >= PASS_THRESHOLD"
+    );
+    assert!(
+        feedback.contains("stub") || feedback.contains("Stub"),
+        "stub feedback must mention stub mode"
+    );
+}
+
+// ── original unit tests (unchanged) ──────────────────────────────────────────
 
 /// `default_tasks_pub` should produce exactly four tasks.
 #[test]

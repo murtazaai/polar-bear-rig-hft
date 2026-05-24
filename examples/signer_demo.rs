@@ -1,7 +1,7 @@
 //! `SignerContext` isolation demo.
 //!
 //! Spawns three concurrent Tokio tasks and demonstrates that each task holds an
-//! independent `LocalSolanaSigner` in its task-local storage. No keypair leaks
+//! independent `LocalSolanaSigner` in its task-local storage.  No keypair leaks
 //! between tasks even though they overlap in wall-clock time.
 //!
 //! ```text
@@ -22,12 +22,9 @@ async fn main() -> Result<()> {
         .with_env_filter(EnvFilter::new("polar_bear_rig_hft=debug"))
         .init();
 
-    // Config::from_env requires ANTHROPIC_API_KEY; provide a dummy value for
-    // this demo since we only exercise the signer, not the LLM path.
-    unsafe {
-        std::env::set_var("ANTHROPIC_API_KEY", "demo-not-used");
-    }
-
+    // Config::from_env() no longer requires ANTHROPIC_API_KEY.
+    // When the key is absent, skip_llm is set to true automatically and all
+    // LLM-free paths (including the signer demo) work without any special setup.
     let cfg = Config::from_env()?;
 
     polar_bear_rig_hft::onchain::demo_signer(&cfg).await?;

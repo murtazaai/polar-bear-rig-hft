@@ -1,14 +1,18 @@
 //! VERIFY phase - output scoring via a cheap LLM.
 //!
 //! Uses `claude-haiku-4-5` to score each `types::ExecuteOutput` against the
-//! acceptance criteria of the originating `types::TradeTask`. The model must
+//! acceptance criteria of the originating `types::TradeTask`.  The model must
 //! return a compact JSON object:
 //!
 //! ```text
 //! {"score": 0.00-1.00, "feedback": "one sentence"}
 //! ```
 //!
-//! A score ≥ [`PASS_THRESHOLD`] (`0.80`) is considered a pass. On failure the
+//! When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true` (no
+//! API key or `--skip-llm` flag), a deterministic pass score of `0.90` is
+//! returned immediately without any network call.
+//!
+//! A score ≥ [`PASS_THRESHOLD`] (`0.80`) is considered a pass.  On failure the
 //! [`crate::pev`] orchestrator injects the verifier's feedback into the next
 //! attempt, up to [`crate::pev::MAX_RETRIES`] retries.
 //!
@@ -57,14 +61,18 @@ struct VerifyResponse {
 
 /// Score an [`ExecuteOutput`] against a [`TradeTask`]'s acceptance criteria.
 ///
-/// Sends the criteria and execution result to Haiku and parses the JSON
-/// response. Falls back to `(0.85, "All criteria met", true)` when the
+/// When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true`
+/// returns `(0.90, "Stub verification: all criteria assumed met", true)`
+/// immediately without any network call.
+///
+/// Otherwise sends the criteria and execution result to Haiku and parses the
+/// JSON response.  Falls back to `(0.85, "All criteria met", true)` when the
 /// response cannot be deserialised, so a transient parse error does not halt
 /// the pipeline.
 ///
 /// # Arguments
 ///
-/// * `cfg`    - Runtime configuration; provides the Anthropic API key.
+/// * `cfg`    - Runtime configuration; provides the Anthropic API key and `skip_llm`.
 /// * `task`   - The task whose `acceptance_criteria` drive the scoring prompt.
 /// * `output` - The result produced by the [`crate::pev::execute`] phase.
 ///
@@ -84,6 +92,21 @@ pub async fn score(
     task: &TradeTask,
     output: &ExecuteOutput,
 ) -> Result<(f64, String, bool)> {
+    // ── Stub path ─────────────────────────────────────────────────────────
+    if cfg.skip_llm {
+        let stub_score = 0.90_f64;
+        let stub_feedback = "Stub verification: all criteria assumed met (skip_llm=true)".to_string();
+        info!(
+            score    = stub_score,
+            passed   = true,
+            feedback = %stub_feedback,
+            task_id  = %task.id,
+            "[VERIFY] Score computed (stub)"
+        );
+        return Ok((stub_score, stub_feedback, true));
+    }
+
+    // ── Live LLM path ─────────────────────────────────────────────────────
     // Client::new is fallible in rig-core 0.36+ - unwrap with `?`.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let verifier = client

@@ -100,7 +100,7 @@ cargo clippy -- -D warnings
 | Rust stable | >= 1.93.1 (MSRV) | `rustup update stable` |
 | `rustfmt` | bundled | `rustup component add rustfmt` |
 | `clippy` | bundled | `rustup component add clippy` |
-| `ANTHROPIC_API_KEY` | — | Only needed for `--mode full` and `#[ignore]` live tests |
+| `ANTHROPIC_API_KEY` | - | Only needed for `--mode full` and `#[ignore]` live tests |
 
 ---
 
@@ -120,7 +120,7 @@ cp .env.example .env
 ```text
 cargo clean                  # remove target/ directory
 cargo build                  # debug build
-cargo build --release        # optimised — required for meaningful benchmark timing
+cargo build --release        # optimised - required for meaningful benchmark timing
 cargo check                  # type-check only; no linking
 ```
 
@@ -162,7 +162,7 @@ Use `--test-threads=1` to avoid concurrent API calls hitting rate limits.
 
 ### Full test inventory
 
-#### `tests/test_pev_loop.rs` — unit, no API key
+#### `tests/test_pev_loop.rs` - unit, no API key
 
 | Test | Asserts |
 |---|---|
@@ -171,7 +171,7 @@ Use `--test-threads=1` to avoid concurrent API calls hitting rate limits.
 | `test_trade_task_serialization` | JSON round-trip preserves pair and action |
 | `test_execute_output_tool_calls` | `tool_calls` populated |
 
-#### `tests/test_sor.rs` — async integration, no API key
+#### `tests/test_sor.rs` - async integration, no API key
 
 | Test | Asserts |
 |---|---|
@@ -179,20 +179,20 @@ Use `--test-threads=1` to avoid concurrent API calls hitting rate limits.
 | `test_sor_latency_recorded` | `latency_ms > 0` |
 | `test_cost_ordering_lower_fee_wins` | cost formula correct |
 
-#### `tests/test_signer_context.rs` — async integration, no API key
+#### `tests/test_signer_context.rs` - async integration, no API key
 
 | Test | Asserts |
 |---|---|
 | `test_signer_context_isolation` | 2 concurrent tasks; independent signers; no error |
 | `test_jupiter_dry_run_returns_simulated_sig` | `is_dry_run`, sig starts with `SIM_`, output > 0 |
 
-#### `tests/test_avm_benchmark.rs` — unit, no API key
+#### `tests/test_avm_benchmark.rs` - unit, no API key
 
 | Test | Asserts |
 |---|---|
 | `test_benchmark_completes_without_error` | `run_benchmark()` returns `Ok(())` |
 
-#### `tests/providers/anthropic.rs` — live, `#[ignore]`
+#### `tests/providers/anthropic.rs` - live, `#[ignore]`
 
 | Test | Asserts |
 |---|---|
