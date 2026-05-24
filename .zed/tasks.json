@@ -11,10 +11,28 @@
     "args": ["--release"],
     "env": { "CARGO_INCREMENTAL": "0", "RUSTFLAGS": "-C target-cpu=native" },
   },
+  // SKIP_LLM=1 is injected into every test task so PEV stub paths activate
+  // automatically with no API key.
+  // Do NOT pass --skip-llm after -- here; that flag belongs to the binary's
+  // clap parser. The test harness (getopts) rejects it:
+  //   "error: Unrecognized option: 'skip-llm'"
   {
     "label": "cargo test",
     "command": "cargo test",
     "args": ["--", "--test-threads=8"],
+    "env": { "SKIP_LLM": "1" },
+  },
+  {
+    "label": "cargo test (with log output)",
+    "command": "cargo test",
+    "args": ["--", "--nocapture", "--test-threads=1"],
+    "env": { "SKIP_LLM": "1" },
+  },
+  {
+    "label": "cargo test --lib",
+    "command": "cargo test",
+    "args": ["--lib"],
+    "env": { "SKIP_LLM": "1" },
   },
   {
     "label": "cargo check (fast)",

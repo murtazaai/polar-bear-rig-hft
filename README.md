@@ -68,24 +68,56 @@ Routing**, and **SignerContext** thread-local signer isolation with full **PEV l
 git clone https://github.com/murtazaai/polar-bear-rig-hft
 cd polar-bear-rig-hft
 cp .env.example .env
-# Add your ANTHROPIC_API_KEY to .env
 
-# Build (release)
+# Optional: add a real key for live LLM execution
+# ANTHROPIC_API_KEY=sk-ant-...
+
+# Build
 cargo build --release
 
-# Run full pipeline (dry-run by default)
-cargo run -- --mode full --pair SOL/USDC --amount 1.0
+# Run full pipeline — offline stub mode (no API key needed)
+cargo run --release -- --mode full --skip-llm
 
-# Run individual modes
-cargo run -- --mode pev
-cargo run -- --mode sor
-cargo run -- --mode signer
-cargo run -- --mode reactor
+# Run full pipeline — live LLM mode (requires ANTHROPIC_API_KEY)
+cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
 
-# Tests
+# Run individual subsystems (never need an API key)
+cargo run --release -- --mode sor
+cargo run --release -- --mode signer
+cargo run --release -- --mode reactor
+
+# Tests (no API key needed)
 cargo test
 cargo clippy -- -D warnings
 ```
+
+---
+
+## Offline / Stub Mode
+
+Every subsystem runs without an `ANTHROPIC_API_KEY`. The PEV loop falls back
+to deterministic offline stubs when no key is available.
+
+Stub mode is activated by **any** of the following — whichever is most
+convenient for your workflow:
+
+| Method | When to use |
+|---|---|
+| Leave `ANTHROPIC_API_KEY` blank in `.env` | Default; no key provisioned |
+| `SKIP_LLM=1 cargo run -- --mode full` | Force stub via env var |
+| `cargo run -- --mode full --skip-llm` | Force stub via CLI flag |
+| `SKIP_LLM=1` set in `.env` | Always-on for a whole project checkout |
+
+> **Important — `cargo test`:** the `--skip-llm` flag belongs to the compiled
+> binary's clap parser. Never pass it after `--` in a `cargo test` invocation:
+>
+> ```text
+> cargo test -- --skip-llm   # ✗ WRONG — test harness rejects it
+> SKIP_LLM=1 cargo test      # ✓ correct
+> ```
+>
+> The Zed task definitions in `.zed/tasks.json` and `.zed/debug.json` already
+> inject `SKIP_LLM=1` as an environment variable for every test task.
 
 ---
 
@@ -100,7 +132,7 @@ cargo clippy -- -D warnings
 | Rust stable | >= 1.93.1 (MSRV) | `rustup update stable` |
 | `rustfmt` | bundled | `rustup component add rustfmt` |
 | `clippy` | bundled | `rustup component add clippy` |
-| `ANTHROPIC_API_KEY` | - | Only needed for `--mode full` and `#[ignore]` live tests |
+| `ANTHROPIC_API_KEY` | — | Only needed for live PEV modes and `#[ignore]` tests |
 
 ---
 
@@ -110,7 +142,8 @@ cargo clippy -- -D warnings
 git clone https://github.com/murtazaai/polar-bear-rig-hft
 cd polar-bear-rig-hft
 cp .env.example .env
-# Edit .env: ANTHROPIC_API_KEY=sk-ant-...
+# Edit .env — set ANTHROPIC_API_KEY=sk-ant-... for live LLM execution,
+# or leave blank to run in offline stub mode.
 ```
 
 ---
@@ -120,7 +153,7 @@ cp .env.example .env
 ```text
 cargo clean                  # remove target/ directory
 cargo build                  # debug build
-cargo build --release        # optimised - required for meaningful benchmark timing
+cargo build --release        # optimised — required for meaningful benchmark timing
 cargo check                  # type-check only; no linking
 ```
 
@@ -138,19 +171,21 @@ strip         = "debuginfo"
 
 ### Tests
 
-All tests in `tests/*.rs` run without a live API key:
+All tests in `tests/*.rs` are fully deterministic and pass with or without a
+live API key. Offline stub mode is activated automatically.
 
 ```text
-cargo test                                          # all deterministic tests
-cargo test -- --nocapture                           # with log output
-cargo test --test test_avm_benchmark                # single file
-cargo test --test test_pev_loop                     # single file
-cargo test --test test_signer_context               # single file
-cargo test --test test_sor                          # single file
-<!--cargo test --test test_best_route_returns_known_venue      # single function-->
+cargo test                                  # all deterministic tests
+SKIP_LLM=1 cargo test                       # explicit offline mode
+cargo test -- --nocapture                   # with log output
+cargo test --test test_avm_benchmark        # single file
+cargo test --test test_pev_loop             # single file
+cargo test --test test_signer_context       # single file
+cargo test --test test_sor                  # single file
 ```
 
 **Live provider tests** (API key required, skipped in CI):
+
 ```text
 ANTHROPIC_API_KEY=sk-ant-... \
     cargo test --test providers -- --ignored --test-threads=1
@@ -162,43 +197,48 @@ Use `--test-threads=1` to avoid concurrent API calls hitting rate limits.
 
 ### Full test inventory
 
-#### `tests/test_pev_loop.rs` - unit, no API key
+#### `tests/test_pev_loop.rs` — unit + stub integration, no API key
 
 | Test | Asserts |
 |---|---|
-| `test_plan_default_tasks_count` | 4 tasks returned |
+| `test_config_from_env_succeeds_without_key` | `Config::from_env()` never returns `Err` |
+| `test_config_has_api_key_empty` | `has_api_key()` is `false` when key is blank |
+| `test_config_has_api_key_present` | `has_api_key()` is `true` when key is set |
+| `test_pev_run_stub_mode_passes` | full PEV loop passes with `skip_llm=true`; 4 tasks, 4 outputs |
+| `test_plan_decompose_stub_mode` | `plan::decompose` returns 4 tasks offline; amount preserved |
+| `test_verify_score_stub_mode` | `verify::score` returns score ≥ 0.80 and mentions "stub" |
+| `test_plan_default_tasks_count` | `default_tasks_pub` returns exactly 4 tasks |
 | `test_verify_pass_threshold` | `PASS_THRESHOLD == 0.80` |
 | `test_trade_task_serialization` | JSON round-trip preserves pair and action |
-| `test_execute_output_tool_calls` | `tool_calls` populated |
+| `test_execute_output_tool_calls` | `tool_calls` is non-empty and references correct tool |
 
-#### `tests/test_sor.rs` - async integration, no API key
+#### `tests/test_sor.rs` — async integration, no API key
 
 | Test | Asserts |
 |---|---|
-| `test_best_route_returns_known_venue` | venue in {Raydium, Orca, Serum}; price > 0 |
+| `test_best_route_returns_known_venue` | venue ∈ {Raydium, Orca, Serum}; price > 0; fee\_bps > 0 |
 | `test_sor_latency_recorded` | `latency_ms > 0` |
-| `test_cost_ordering_lower_fee_wins` | cost formula correct |
+| `test_cost_ordering_lower_fee_wins` | lower fee\_bps yields lower effective cost |
 
-#### `tests/test_signer_context.rs` - async integration, no API key
+#### `tests/test_signer_context.rs` — async integration, no API key
 
 | Test | Asserts |
 |---|---|
-| `test_signer_context_isolation` | 2 concurrent tasks; independent signers; no error |
-| `test_jupiter_dry_run_returns_simulated_sig` | `is_dry_run`, sig starts with `SIM_`, output > 0 |
+| `test_signer_context_isolation` | two concurrent tasks hold independent signers; no error |
+| `test_jupiter_dry_run_returns_simulated_sig` | `is_dry_run=true`, sig starts with `SIM_`, output > 0 |
 
-#### `tests/test_avm_benchmark.rs` - unit, no API key
+#### `tests/test_avm_benchmark.rs` — unit, no API key
 
 | Test | Asserts |
 |---|---|
 | `test_benchmark_completes_without_error` | `run_benchmark()` returns `Ok(())` |
 
-#### `tests/providers/anthropic.rs` - live, `#[ignore]`
+#### `tests/providers/anthropic.rs` — live, `#[ignore]`
 
 | Test | Asserts |
 |---|---|
-| `test_live_plan_decomposes_four_tasks` | Haiku returns 4 tasks with correct pair |
-| `test_live_pev_loop_passes` | full loop passes with score >= 0.80 |
-| `test_live_sor_returns_known_venue` | valid venue name |
+| `test_live_plan_decomposes_four_tasks` | Haiku returns 4 tasks with correct pair and amount |
+| `test_live_pev_loop_passes` | full loop passes with score ≥ 0.80 |
 
 ---
 
@@ -211,16 +251,20 @@ cargo clippy --all-targets -- -D warnings           # lint (CI mode)
 cargo doc --open                                    # browse rustdoc locally
 RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc   # CI docs check
 ```
+
 ---
 
 ### Running the binary
 
 ```text
-# Full pipeline
+# Full pipeline — offline stub (no API key needed)
+cargo run --release -- --mode full --skip-llm --pair SOL/USDC --amount 1.0
+
+# Full pipeline — live LLM (requires ANTHROPIC_API_KEY)
 cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
 
-# Individual subsystems
-cargo run --release -- --mode pev
+# Individual subsystems (never need an API key)
+cargo run --release -- --mode pev --skip-llm
 cargo run --release -- --mode sor
 cargo run --release -- --mode signer
 cargo run --release -- --mode reactor

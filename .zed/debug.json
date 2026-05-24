@@ -64,11 +64,18 @@
     "request": "launch",
     "adapter": "CodeLLDB",
   },
+  // ── Test tasks ─────────────────────────────────────────────────────────────
+  // IMPORTANT: --skip-llm is a flag for the compiled binary (clap parser).
+  // It must NEVER appear after -- in a cargo test invocation.
+  // The Rust test harness uses getopts, not clap, and will reject it:
+  //   error: Unrecognized option: 'skip-llm'
+  // Use the SKIP_LLM=1 environment variable instead for all test tasks.
   {
     "label": "Test all deterministic tests - polar-bear-rig-hft",
     "build": {
       "command": "cargo",
       "args": ["test"],
+      "env": { "SKIP_LLM": "1" },
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
@@ -81,6 +88,7 @@
     "build": {
       "command": "cargo",
       "args": ["test", "--", "--nocapture"],
+      "env": { "SKIP_LLM": "1" },
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
@@ -93,6 +101,7 @@
     "build": {
       "command": "cargo",
       "args": ["test", "--test", "test_avm_benchmark"],
+      "env": { "SKIP_LLM": "1" },
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
@@ -105,6 +114,7 @@
     "build": {
       "command": "cargo",
       "args": ["test", "--test", "test_pev_loop"],
+      "env": { "SKIP_LLM": "1" },
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
@@ -117,6 +127,7 @@
     "build": {
       "command": "cargo",
       "args": ["test", "--test", "test_signer_context"],
+      "env": { "SKIP_LLM": "1" },
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
@@ -129,6 +140,7 @@
     "build": {
       "command": "cargo",
       "args": ["test", "--test", "test_sor"],
+      "env": { "SKIP_LLM": "1" },
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
@@ -136,6 +148,9 @@
     "request": "launch",
     "adapter": "CodeLLDB",
   },
+  // ── Binary run tasks ───────────────────────────────────────────────────────
+  // --skip-llm belongs here: it is passed to the compiled binary via cargo run,
+  // which passes it to clap. This is the ONLY correct place for this flag.
   {
     "label": "Build & Debug polar-bear-rig-hft",
     "build": {
@@ -160,7 +175,6 @@
     "request": "launch",
     "adapter": "CodeLLDB",
   },
-
   {
     "label": "Run Binary - Full Pipeline - polar-bear-rig-hft",
     "build": {
@@ -184,10 +198,33 @@
     "adapter": "CodeLLDB",
   },
   {
+    "label": "Run Binary - Full Pipeline (offline stub) - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--",
+        "--mode",
+        "full",
+        "--skip-llm",
+        "--pair",
+        "SOL/USDC",
+        "--amount",
+        "1.0",
+      ],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
     "label": "Run Plan-Execute-Verify - Individual Subsystem - polar-bear-rig-hft",
     "build": {
       "command": "cargo",
-      "args": ["run", "--release", "--", "--mode", "pev"],
+      "args": ["run", "--release", "--", "--mode", "pev", "--skip-llm"],
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
