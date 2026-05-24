@@ -10,7 +10,6 @@ fn test_benchmark_completes_without_error() {
     let result = polar_bear_rig_hft::avm::run_benchmark();
     assert!(
         result.is_ok(),
-        "AVM benchmark returned an unexpected error: {:?}",
-        result
+        "AVM benchmark returned an unexpected error: {result:?}"
     );
 }

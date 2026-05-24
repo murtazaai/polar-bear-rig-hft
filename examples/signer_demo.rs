@@ -1,4 +1,4 @@
-//! SignerContext isolation demo.
+//! `SignerContext` isolation demo.
 //!
 //! Spawns three concurrent Tokio tasks and demonstrates that each task holds an
 //! independent `LocalSolanaSigner` in its task-local storage. No keypair leaks

@@ -44,6 +44,8 @@ pub fn run() -> anyhow::Result<()> {
     }
     let evm_ns = t1.elapsed().as_nanos() / 10_000;
 
+    #[allow(clippy::cast_precision_loss)]
+    // speedup ratio; precision loss beyond 2^52 ns (~52 days) is acceptable
     let speedup = evm_ns as f64 / avm_ns as f64;
     info!(
         avm_ns_per_op = avm_ns,
@@ -61,7 +63,7 @@ pub fn run() -> anyhow::Result<()> {
 /// Marked `#[inline(always)]` and uses only stack-local arithmetic to model
 /// the near-zero dispatch overhead of a JIT-compiled instruction sequence.
 /// No heap allocations occur.
-#[inline(always)]
+#[inline]
 fn avm_execute_simulated() -> u64 {
     let mut acc = 0u64;
     for i in 0..100u64 {

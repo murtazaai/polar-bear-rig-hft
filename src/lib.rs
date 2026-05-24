@@ -5,7 +5,7 @@
 //!
 //! Technology Lead: Murtaza Ali Imtiaz (July 2019 – present).
 //!
-//! Combines LLM-driven agentic pipelines with on-chain DeFi execution on
+//! Combines LLM-driven agentic pipelines with on-chain `DeFi` execution on
 //! Solana, enabling statefully supervised, multi-step agent workflows with
 //! full PEV loop governance across the Agentic Web.
 //!

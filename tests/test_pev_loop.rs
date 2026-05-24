@@ -40,9 +40,8 @@ fn test_plan_default_tasks_count() {
 /// The pass threshold constant must equal `0.80`.
 #[test]
 fn test_verify_pass_threshold() {
-    assert_eq!(
-        polar_bear_rig_hft::pev::verify::PASS_THRESHOLD,
-        0.80,
+    assert!(
+        (polar_bear_rig_hft::pev::verify::PASS_THRESHOLD - 0.80).abs() < f64::EPSILON,
         "PASS_THRESHOLD must be 0.80"
     );
 }

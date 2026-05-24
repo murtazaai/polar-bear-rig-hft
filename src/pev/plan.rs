@@ -17,7 +17,8 @@
 
 use anyhow::Result;
 use rig::{
-    client::{CompletionClient, ProviderClient},
+    client::CompletionClient,
+    // client::ProviderClient,
     completion::Prompt,
     providers::anthropic,
 };

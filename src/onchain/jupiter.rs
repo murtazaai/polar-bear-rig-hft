@@ -63,6 +63,7 @@ pub struct SwapResult {
 ///
 /// Returns `Err` when `dry_run` is `false`, because live-mode signing is not
 /// yet wired up.
+#[allow(clippy::unused_async)] // TODO: will await Jupiter RPC call once dry_run path is removed
 pub async fn simulate_swap(route: &Route, amount: f64, dry_run: bool) -> Result<SwapResult> {
     info!(
         venue  = %route.venue,
@@ -80,7 +81,7 @@ pub async fn simulate_swap(route: &Route, amount: f64, dry_run: bool) -> Result<
     }
 
     let output = amount * route.effective_price;
-    let fee = amount * (route.fee_bps as f64 / 10_000.0);
+    let fee = amount * (f64::from(route.fee_bps) / 10_000.0);
     let sig = format!("SIM_{:016x}", rand::random::<u64>());
 
     let result = SwapResult {

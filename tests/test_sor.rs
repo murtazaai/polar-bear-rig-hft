@@ -53,7 +53,7 @@ fn test_cost_ordering_lower_fee_wins() {
     let cheaper = make_route("A", 143.50, 20);
     let pricier = make_route("B", 143.50, 30);
 
-    let cost = |r: &Route| r.effective_price * (1.0 + r.fee_bps as f64 / 10_000.0);
+    let cost = |r: &Route| r.effective_price * (1.0 + f64::from(r.fee_bps) / 10_000.0);
     assert!(
         cost(&cheaper) < cost(&pricier),
         "venue with lower fee_bps should have lower effective cost"

@@ -1,4 +1,4 @@
-//! SignerContext - task-local keypair isolation for secure on-chain operations.
+//! `SignerContext` - task-local keypair isolation for secure on-chain operations.
 //!
 //! Implements the security boundary described in the `rig-onchain-kit`
 //! documentation: every async on-chain call must be wrapped in

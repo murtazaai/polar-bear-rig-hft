@@ -66,9 +66,7 @@ impl Config {
                 .unwrap_or_else(|_| "https://api.devnet.solana.com".to_string()),
             solana_private_key: std::env::var("SOLANA_PRIVATE_KEY")
                 .unwrap_or_else(|_| "DEMO_KEY_PLACEHOLDER".to_string()),
-            dry_run: std::env::var("DRY_RUN")
-                .map(|v| v == "true" || v == "1")
-                .unwrap_or(true),
+            dry_run: std::env::var("DRY_RUN").map_or(true, |v| v == "true" || v == "1"),
         })
     }
 }

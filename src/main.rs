@@ -2,7 +2,7 @@
 //!
 //! **Polar Bear Systems** | Technology Lead: Murtaza Ali Imtiaz
 //!
-//! Platform: Rig (Rust Inference Gateway / ARC) · AVM · SignerContext · PEV Loop
+//! Platform: Rig (Rust Inference Gateway / ARC) · AVM · `SignerContext` · PEV Loop
 //!
 //! ## Usage
 //!
@@ -35,7 +35,7 @@ enum Mode {
     Pev,
     /// Run only the Smart Order Routing venue comparison.
     Sor,
-    /// Run only the SignerContext isolation demo.
+    /// Run only the `SignerContext` isolation demo.
     Signer,
     /// Run only the AVM benchmark and Reactor GUI audit log.
     Reactor,

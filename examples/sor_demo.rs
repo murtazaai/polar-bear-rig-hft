@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     println!("│  Fee:           {:>18} bps │", route.fee_bps);
     println!(
         "│  Eff. cost:     {:>17.4} USDC │",
-        route.effective_price * (1.0 + route.fee_bps as f64 / 10_000.0)
+        route.effective_price * (1.0 + f64::from(route.fee_bps) / 10_000.0)
     );
     println!("│  Latency:       {:>17} ms  │", route.latency_ms);
     println!("└─────────────────────────────────────┘");

@@ -75,9 +75,11 @@ pub async fn best_route(pair: &str, amount: f64) -> Result<Route> {
 
     // Sort ascending by effective cost so `next()` yields the cheapest venue.
     candidates.sort_by(|a, b| {
-        let cost_a = a.effective_price * (1.0 + a.fee_bps as f64 / 10_000.0);
-        let cost_b = b.effective_price * (1.0 + b.fee_bps as f64 / 10_000.0);
-        cost_a.partial_cmp(&cost_b).unwrap()
+        let cost_a = a.effective_price * (1.0 + f64::from(a.fee_bps) / 10_000.0);
+        let cost_b = b.effective_price * (1.0 + f64::from(b.fee_bps) / 10_000.0);
+        cost_a
+            .partial_cmp(&cost_b)
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
 
     let mut best = candidates
@@ -126,10 +128,10 @@ async fn query_orca(_pair: &str, _amount: f64) -> Result<Route> {
     })
 }
 
-/// Query the Serum / OpenBook central limit order book for a price quote.
+/// Query the Serum / `OpenBook` central limit order book for a price quote.
 ///
 /// **Demo stub.** Returns a hard-coded price after a simulated 15 ms network
-/// round-trip. Replace with the OpenBook SDK in production.
+/// round-trip. Replace with the `OpenBook` SDK in production.
 async fn query_serum(_pair: &str, _amount: f64) -> Result<Route> {
     tokio::time::sleep(std::time::Duration::from_millis(15)).await;
     Ok(Route {
