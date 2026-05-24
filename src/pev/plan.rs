@@ -5,7 +5,7 @@
 //! returned as a JSON array.
 //!
 //! When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true` (no
-//! API key or `--skip-llm` flag), the function returns [`default_tasks`]
+//! API key or `--skip-llm` flag), the function returns `default_tasks`
 //! directly without making any network call.
 //!
 //! When the LLM response cannot be parsed, `default_tasks` is used as a
