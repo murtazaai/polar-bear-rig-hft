@@ -4,12 +4,276 @@
 // see: https://zed.dev/docs/debugger
 [
   {
-    "label": "Build & Debug native binary",
+    "label": "Clean polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["clean"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Enforce code style - polar-bear-rig-hft",
+    "build": {
+      "command": "rustfmt",
+      "args": ["--check"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Zero lint warnings allowed - polar-bear-rig-hft",
+    "build": {
+      "command": "clippy",
+      "args": ["-D", "warnings"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Format - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["fmt", "--all"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Format all & check- polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["fmt", "--all", "--", "check"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Lint (clippy) - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["clippy", "--all-targets", "--", "-D", "warnings"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Type-check only; no linking polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["check"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Browse rustdoc locally polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["doc", "--open"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "CI docs check",
+    "build": {
+      "command": "cargo",
+      "args": ["doc", "--open"],
+      "RUSTDOCFLAGS": ["--cfg", "docsrs", "-D", "warnings", "cargo", "doc"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Test all deterministic tests - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["test"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Test with log output - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["test", "--", "--nocapture"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Test AVM Benchmarks - Single File - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["test", "--test", "test_avm_benchmark"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Test PEV Loop - Single File - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["test", "--test", "test_pev_loop"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Test Singer Context - Single File - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["test", "--test", "test_signer_context"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Test Smart Order Routing - Single File - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["test", "--test", "test_sor"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Build & Debug polar-bear-rig-hft",
     "build": {
       "command": "cargo",
       "args": ["build"],
     },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/binary",
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Release Build & Debug polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["build", "--release"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/release/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+
+  {
+    "label": "Run Binary - Full Pipeline - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": [
+        "run",
+        "--release",
+        "--",
+        "--mode",
+        "full",
+        "--pair",
+        "SOL/USDC",
+        "--amount",
+        "1.0",
+      ],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Run Plan-Execute-Verify - Individual Subsystem - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["run", "--release", "--", "--mode", "pev"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Run Smart Order Routing - Individual Subsystem - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["run", "--release", "--", "--mode", "sor"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Run On-chain Execution & SignerContext - Individual Subsystem - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["run", "--release", "--", "--mode", "signer"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
+    "sourceLanguages": ["rust"],
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+  {
+    "label": "Run Reactor GUI audit log - Individual Subsystem - polar-bear-rig-hft",
+    "build": {
+      "command": "cargo",
+      "args": ["run", "--release", "--", "--mode", "reactor"],
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
     "sourceLanguages": ["rust"],
     "request": "launch",
