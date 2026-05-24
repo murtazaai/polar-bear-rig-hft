@@ -1,7 +1,7 @@
 //! VERIFY phase - output scoring via a cheap LLM.
 //!
-//! Uses `claude-haiku-4-5` to score each [`types::ExecuteOutput`] against the
-//! acceptance criteria of the originating [`types::TradeTask`]. The model must
+//! Uses `claude-haiku-4-5` to score each `types::ExecuteOutput` against the
+//! acceptance criteria of the originating `types::TradeTask`. The model must
 //! return a compact JSON object:
 //!
 //! ```text

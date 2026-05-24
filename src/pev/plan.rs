@@ -1,10 +1,10 @@
 //! PLAN phase - trade decomposition via a cheap LLM.
 //!
 //! Uses `claude-haiku-4-5` (the lowest-cost Anthropic model) to decompose a
-//! high-level trade request into exactly four atomic [`types::TradeTask`]
-//! objects, returned as a JSON array.
+//! high-level trade request into exactly four atomic `types::TradeTask` objects,
+//! returned as a JSON array.
 //!
-//! When the LLM response cannot be parsed, [`default_tasks`] is used as a
+//! When the LLM response cannot be parsed, `default_tasks` is used as a
 //! deterministic fallback so the PEV pipeline always continues forward.
 //!
 //! ## Rig client trait requirements (rig-core ≥ 0.36)
@@ -42,10 +42,10 @@ simulate_execution.
 
 /// Decompose a trade request into a [`Vec`] of [`TradeTask`] items.
 ///
-/// Calls the Haiku model via `rig-core` with [`PLAN_PREAMBLE`] and a prompt
+/// Calls the Haiku model via `rig-core` with `PLAN_PREAMBLE` and a prompt
 /// containing the pair and amount. The response is stripped of any accidental
 /// Markdown fences before deserialisation. On JSON parse failure the function
-/// falls back to [`default_tasks`] so the pipeline is never blocked.
+/// falls back to `default_tasks` so the pipeline is never blocked.
 ///
 /// # Arguments
 ///
@@ -57,7 +57,7 @@ simulate_execution.
 ///
 /// Returns `Err` if `anthropic::Client::new` fails or the LLM HTTP call fails
 /// (network error, authentication failure, etc.).  A malformed JSON response is
-/// handled internally by falling back to [`default_tasks`].
+/// handled internally by falling back to `default_tasks`.
 pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<TradeTask>> {
     info!(pair, amount, "[PLAN] Decomposing trade task");
 
@@ -94,7 +94,7 @@ pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<Trad
     Ok(tasks)
 }
 
-/// Public alias for [`default_tasks`], exposed for integration tests.
+/// Public alias for `default_tasks`, exposed for integration tests.
 ///
 /// Returns the canonical four-task breakdown for any pair and amount without
 /// making any LLM network call, making it suitable for unit and integration

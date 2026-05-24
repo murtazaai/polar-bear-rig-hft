@@ -43,7 +43,7 @@
     "label": "Browse rustdoc locally polar-bear-rig-hft",
     "build": {
       "command": "cargo",
-      "args": ["doc", "--open"],
+      "args": ["doc", "--open", "--document-private-items"],
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
     // sourceLanguages is required for CodeLLDB (not GDB) when using Rust

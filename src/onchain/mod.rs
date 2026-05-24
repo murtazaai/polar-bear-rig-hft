@@ -1,6 +1,6 @@
 //! On-chain execution layer.
 //!
-//! Exposes two public entry points consumed by [`crate::main`]:
+//! Exposes two public entry points consumed by `crate::main`:
 //!
 //! * [`execute_swap`] - wraps a Jupiter swap simulation inside an isolated
 //!   [`signer::LocalSolanaSigner`] context and returns a

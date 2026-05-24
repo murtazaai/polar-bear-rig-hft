@@ -37,7 +37,7 @@ pub struct Route {
 ///
 /// Venues are queried in parallel via [`tokio::join!`]. Failed queries are
 /// silently skipped (their `Err` values are discarded). If every query fails,
-/// [`fallback_route`] is returned so the pipeline is never blocked.
+/// `fallback_route` is returned so the pipeline is never blocked.
 ///
 /// **Cost metric:** `price × (1 + fee_bps / 10_000)`. This accounts for both
 /// the quoted price and the trading fee, giving a true all-in execution cost.

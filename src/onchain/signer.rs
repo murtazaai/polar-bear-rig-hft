@@ -89,7 +89,7 @@ impl LocalSolanaSigner {
 /// # Type parameters
 ///
 /// * `F`   - A [`FnOnce`] closure that produces a future.
-/// * `Fut` - The [`Future`][std::future::Future] returned by `F`.
+/// * `Fut` - The [`Future`] returned by `F`.
 /// * `T`   - The `Ok` type of the future's output.
 ///
 /// # Errors

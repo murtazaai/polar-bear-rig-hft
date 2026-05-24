@@ -1,6 +1,6 @@
 //! EXECUTE phase - agentic task execution via Sonnet.
 //!
-//! Each [`types::TradeTask`] is handed to a `claude-sonnet-4-6` agent that
+//! Each `types::TradeTask` is handed to a `claude-sonnet-4-6` agent that
 //! reasons step-by-step and invokes the appropriate tool. Tool calls are
 //! simulated in this demo; in production they would be real `rig-core`
 //! [`rig::tool::Tool`] implementations backed by live market data APIs.

@@ -8,7 +8,7 @@
 //! | AVM (Agave JIT) | `#[inline(always)]`, stack-only arithmetic | ~1–3 ns/op |
 //! | EVM (bytecode)  | `#[inline(never)]`, heap allocation per call | ~10–30 ns/op |
 //!
-//! The heap allocation in [`evm_execute_simulated`] models the cost of
+//! The heap allocation in `evm_execute_simulated` models the cost of
 //! fetching and decoding EVM bytecode from memory on every iteration - a
 //! realistic representation of interpreter dispatch overhead.
 //!
