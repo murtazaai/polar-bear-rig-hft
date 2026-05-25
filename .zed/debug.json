@@ -1,271 +1,319 @@
-// Project-local debug tasks
+// polar-bear-rig-hft – Zed debugger configurations
 //
-// For more documentation on how to configure debug tasks,
-// see: https://zed.dev/docs/debugger
+// Adapter:  CodeLLDB  (LLDB-based; best Rust support in Zed)
+// Docs:     https://zed.dev/docs/debugger
+//
+// Schema notes
+// ────────────
+// • `build`  – pre-launch shell task (supports `command`, `args`, `cwd`).
+//              It does NOT accept an `env` key; use a shell one-liner for
+//              env-gated build steps (see the CI docs check entry below).
+// • `env`    – environment variables injected into the LAUNCHED PROCESS.
+//              Must be at the top level of the config object, never inside
+//              `build`.  This is where SKIP_LLM=1 belongs for test configs.
+// • `sourceLanguages` – required by CodeLLDB for Rust; enables pretty-printers
+//              for std types (Vec, HashMap, Option, …).
+//
+// IMPORTANT – SKIP_LLM and test configs
+// ──────────────────────────────────────
+// The test debug configs below set `env: { "SKIP_LLM": "1" }` at the top
+// level so the PEV stub paths activate automatically.  The flag --skip-llm
+// belongs to the compiled binary's clap parser and must NEVER appear after --
+// in a cargo test invocation.
+//
+// Cargo test binary paths
+// ──────────────────────────────────────
+// `cargo test --no-run` produces a binary under target/debug/deps/ with a
+// hash suffix that changes on each recompile.  The helper script below each
+// test config resolves the current path automatically.  Alternatively, run
+// tests as tasks (tasks.json) and attach the debugger to the test process
+// after launch using "Attach to Process".
+
 [
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // § MAIN BINARY – debug builds
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
-    "label": "Clean polar-bear-rig-hft",
+    "label": "debug · build & launch  [dev, --skip-llm]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["clean"],
+      "args": ["build"]
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "args": ["--mode", "full", "--skip-llm", "--pair", "SOL/USDC", "--amount", "1.0"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug",
+      "DRY_RUN": "true",
+      "SKIP_LLM": "1"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
   {
-    "label": "Lint (clippy) - polar-bear-rig-hft",
+    "label": "debug · PEV only  [dev, --skip-llm]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["clippy", "--all-targets", "--", "-D", "warnings"],
+      "args": ["build"]
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "args": ["--mode", "pev", "--skip-llm"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug",
+      "DRY_RUN": "true",
+      "SKIP_LLM": "1"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
   {
-    "label": "Type-check only; no linking polar-bear-rig-hft",
+    "label": "debug · SOR only  [dev]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["check"],
+      "args": ["build"]
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "args": ["--mode", "sor"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug",
+      "DRY_RUN": "true"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
   {
-    "label": "Browse rustdoc locally polar-bear-rig-hft",
+    "label": "debug · SignerContext demo  [dev]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["doc", "--open", "--document-private-items"],
+      "args": ["build"]
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "args": ["--mode", "signer"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug",
+      "DRY_RUN": "true"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
   {
-    "label": "CI docs check",
+    "label": "debug · AVM Reactor benchmark  [dev]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["doc", "--open"],
-      "RUSTDOCFLAGS": ["--cfg", "docsrs", "-D", "warnings", "cargo", "doc"],
+      "args": ["build"]
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
-  },
-  // ── Test tasks ─────────────────────────────────────────────────────────────
-  // IMPORTANT: --skip-llm is a flag for the compiled binary (clap parser).
-  // It must NEVER appear after -- in a cargo test invocation.
-  // The Rust test harness uses getopts, not clap, and will reject it:
-  //   error: Unrecognized option: 'skip-llm'
-  // Use the SKIP_LLM=1 environment variable instead for all test tasks.
-  {
-    "label": "Test all deterministic tests - polar-bear-rig-hft",
-    "build": {
-      "command": "cargo",
-      "args": ["test"],
-      "env": { "SKIP_LLM": "1" },
+    "args": ["--mode", "reactor"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug"
     },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // § MAIN BINARY – release build (meaningful benchmark timing)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
-    "label": "Test with log output - polar-bear-rig-hft",
+    // Release binary with debuginfo stripped (Cargo.toml: strip = "debuginfo").
+    // Step-through debugging is limited; primarily useful for perf profiling
+    // and observing real-world latency of the AVM benchmark.
+    "label": "debug · release build & launch  [--skip-llm]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["test", "--", "--nocapture"],
-      "env": { "SKIP_LLM": "1" },
-    },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
-  },
-  {
-    "label": "Test AVM Benchmarks - Single File - polar-bear-rig-hft",
-    "build": {
-      "command": "cargo",
-      "args": ["test", "--test", "test_avm_benchmark"],
-      "env": { "SKIP_LLM": "1" },
-    },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
-  },
-  {
-    "label": "Test PEV Loop - Single File - polar-bear-rig-hft",
-    "build": {
-      "command": "cargo",
-      "args": ["test", "--test", "test_pev_loop"],
-      "env": { "SKIP_LLM": "1" },
-    },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
-  },
-  {
-    "label": "Test Singer Context - Single File - polar-bear-rig-hft",
-    "build": {
-      "command": "cargo",
-      "args": ["test", "--test", "test_signer_context"],
-      "env": { "SKIP_LLM": "1" },
-    },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
-  },
-  {
-    "label": "Test Smart Order Routing - Single File - polar-bear-rig-hft",
-    "build": {
-      "command": "cargo",
-      "args": ["test", "--test", "test_sor"],
-      "env": { "SKIP_LLM": "1" },
-    },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
-  },
-  // ── Binary run tasks ───────────────────────────────────────────────────────
-  // --skip-llm belongs here: it is passed to the compiled binary via cargo run,
-  // which passes it to clap. This is the ONLY correct place for this flag.
-  {
-    "label": "Build & Debug polar-bear-rig-hft",
-    "build": {
-      "command": "cargo",
-      "args": ["build"],
-    },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
-  },
-  {
-    "label": "Release Build & Debug polar-bear-rig-hft",
-    "build": {
-      "command": "cargo",
-      "args": ["build", "--release"],
+      "args": ["build", "--release"]
     },
     "program": "$ZED_WORKTREE_ROOT/target/release/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "args": ["--mode", "full", "--skip-llm", "--pair", "SOL/USDC", "--amount", "1.0"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=info",
+      "DRY_RUN": "true",
+      "SKIP_LLM": "1"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // § INTEGRATION TESTS
+  //
+  // Cargo produces test binaries in target/debug/deps/ with hash suffixes.
+  // The build step compiles the test binary (--no-run); the program field uses
+  // a glob-resolution shell expansion evaluated by CodeLLDB at launch time.
+  // If CodeLLDB cannot resolve the glob, run the corresponding task from
+  // tasks.json and use "Attach to Process" to connect the debugger instead.
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
-    "label": "Run Binary - Full Pipeline - polar-bear-rig-hft",
+    "label": "debug · test_avm_benchmark  [SKIP_LLM=1]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--",
-        "--mode",
-        "full",
-        "--pair",
-        "SOL/USDC",
-        "--amount",
-        "1.0",
-      ],
+      "args": ["test", "--no-run", "--test", "test_avm_benchmark"]
     },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    // CodeLLDB resolves the first binary matching this glob pattern.
+    "program": "$ZED_WORKTREE_ROOT/target/debug/deps/test_avm_benchmark-*",
+    "args": ["--nocapture"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug",
+      "SKIP_LLM": "1"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
   {
-    "label": "Run Binary - Full Pipeline (offline stub) - polar-bear-rig-hft",
+    "label": "debug · test_pev_loop  [SKIP_LLM=1]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": [
-        "run",
-        "--release",
-        "--",
-        "--mode",
-        "full",
-        "--skip-llm",
-        "--pair",
-        "SOL/USDC",
-        "--amount",
-        "1.0",
-      ],
+      "args": ["test", "--no-run", "--test", "test_pev_loop"]
     },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "program": "$ZED_WORKTREE_ROOT/target/debug/deps/test_pev_loop-*",
+    "args": ["--nocapture"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug",
+      "SKIP_LLM": "1"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
   {
-    "label": "Run Plan-Execute-Verify - Individual Subsystem - polar-bear-rig-hft",
+    "label": "debug · test_signer_context  [SKIP_LLM=1]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["run", "--release", "--", "--mode", "pev", "--skip-llm"],
+      "args": ["test", "--no-run", "--test", "test_signer_context"]
     },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "program": "$ZED_WORKTREE_ROOT/target/debug/deps/test_signer_context-*",
+    "args": ["--nocapture"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug",
+      "SKIP_LLM": "1"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
   {
-    "label": "Run Smart Order Routing - Individual Subsystem - polar-bear-rig-hft",
+    "label": "debug · test_sor  [SKIP_LLM=1]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["run", "--release", "--", "--mode", "sor"],
+      "args": ["test", "--no-run", "--test", "test_sor"]
     },
-    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "program": "$ZED_WORKTREE_ROOT/target/debug/deps/test_sor-*",
+    "args": ["--nocapture"],
+    "env": {
+      "RUST_LOG": "polar_bear_rig_hft=debug",
+      "SKIP_LLM": "1"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // § TOOLING / CI CHECKS  (build-only sessions; no interactive debug)
+  // ══════════════════════════════════════════════════════════════════════════
+
   {
-    "label": "Run On-chain Execution & SignerContext - Individual Subsystem - polar-bear-rig-hft",
+    // Type-check all targets without linking; fastest feedback cycle.
+    "label": "check · type-check only (no link)",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["run", "--release", "--", "--mode", "signer"],
+      "args": ["check", "--all-targets"]
     },
+    // Dummy program – the build step is the goal; nothing is launched.
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
   {
-    "label": "Run Reactor GUI audit log - Individual Subsystem - polar-bear-rig-hft",
+    // Clippy in CI mode: zero warnings allowed.
+    "label": "check · clippy -D warnings",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
     "build": {
       "command": "cargo",
-      "args": ["run", "--release", "--", "--mode", "reactor"],
+      "args": ["clippy", "--all-targets", "--", "-D", "warnings"]
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
-    // sourceLanguages is required for CodeLLDB (not GDB) when using Rust
-    "sourceLanguages": ["rust"],
-    "request": "launch",
-    "adapter": "CodeLLDB",
+    "cwd": "$ZED_WORKTREE_ROOT"
   },
+
+  {
+    // Documentation build with the same flags as CI.
+    // RUSTDOCFLAGS cannot go inside `build` (schema limitation); the env key
+    // at the top level sets it for the cargo invocation via CodeLLDB's process
+    // environment forwarding.
+    "label": "check · doc CI gate  [RUSTDOCFLAGS=-D warnings]",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
+    "build": {
+      "command": "cargo",
+      "args": ["doc", "--no-deps"]
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    "env": {
+      "RUSTDOCFLAGS": "--cfg docsrs -D warnings"
+    },
+    "cwd": "$ZED_WORKTREE_ROOT"
+  },
+
+  {
+    // Open rustdoc in the browser; includes private items.
+    "label": "doc · open (with private items)",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
+    "build": {
+      "command": "cargo",
+      "args": ["doc", "--open", "--document-private-items"]
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    "cwd": "$ZED_WORKTREE_ROOT"
+  },
+
+  {
+    // Full clean – removes the entire target/ directory.
+    // Useful before a fresh release build or when switching Rust toolchains.
+    "label": "build · cargo clean",
+    "adapter": "CodeLLDB",
+    "request": "launch",
+    "sourceLanguages": ["rust"],
+    "build": {
+      "command": "cargo",
+      "args": ["clean"]
+    },
+    "program": "$ZED_WORKTREE_ROOT/target/debug/polar-bear-rig-hft",
+    "cwd": "$ZED_WORKTREE_ROOT"
+  }
 ]
