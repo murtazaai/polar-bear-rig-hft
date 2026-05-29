@@ -20,7 +20,7 @@
 ### Setup
 
 ```bash
-git clone https://github.com/polarbearsystems/polar-bear-rig-hft
+    git clone https://github.com/murtazaai/polar-bear-rig-hft
 cd polar-bear-rig-hft
 cp .env.example .env
 # Edit .env: optionally set ANTHROPIC_API_KEY=sk-ant-...
