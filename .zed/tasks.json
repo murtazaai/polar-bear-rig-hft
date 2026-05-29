@@ -493,28 +493,4 @@
             "ci"
         ]
     },
-    // ══════════════════════════════════════════════════════════════════════════
-    // § publish · full publish simulation — fix everything it flags
-    // ══════════════════════════════════════════════════════════════════════════
-    {
-        "label": "publish · full publish simulation — fix everything it flags",
-        "command": "cargo",
-        "args": [
-            "publish",
-            "--dry-run",
-        ],
-        "tags": [
-            "publish"
-        ]
-    },
-    {
-        "label": "publish · full publish",
-        "command": "cargo",
-        "args": [
-            "publish",
-        ],
-        "tags": [
-            "publish"
-        ]
-    },
 ]
