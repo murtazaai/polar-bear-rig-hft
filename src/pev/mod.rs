@@ -34,9 +34,9 @@ pub mod verify;
 
 use anyhow::Result;
 use tracing::{info, warn};
+use types::PEVResult;
 
 use crate::config::Config;
-use types::PEVResult;
 
 /// Maximum number of Execute → Verify retries per task before accepting a
 /// failing score and moving on to the next task.

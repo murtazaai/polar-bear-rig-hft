@@ -5,12 +5,10 @@
 //! Contains two sub-modules that together demonstrate the performance and
 //! auditability story of the Agave runtime inside the HFT platform:
 //!
-//! * [`benchmark`] - micro-benchmark comparing AVM JIT-compiled execution
-//!   against EVM bytecode-style interpretation, demonstrating the ~8–12×
-//!   throughput advantage of the Agave runtime.
-//! * [`reactor`] - Reactor GUI audit-log simulation, emitting a structured
-//!   before/after log of a smart contract deployment so operators get a
-//!   human-readable, per-trade execution trace.
+//! * `benchmark` - micro-benchmark comparing AVM JIT-compiled execution against EVM bytecode-style
+//!   interpretation, demonstrating the ~8–12× throughput advantage of the Agave runtime.
+//! * `reactor` - Reactor GUI audit-log simulation, emitting a structured before/after log of a
+//!   smart contract deployment so operators get a human-readable, per-trade execution trace.
 //!
 //! ## Public API
 //!
@@ -22,8 +20,9 @@
 pub mod benchmark;
 pub mod reactor;
 
-use crate::{onchain::jupiter::SwapResult, sor::router::Route};
 use anyhow::Result;
+
+use crate::{onchain::jupiter::SwapResult, sor::router::Route};
 
 /// Run the AVM vs EVM execution benchmark and log the speedup factor.
 ///

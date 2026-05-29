@@ -2,14 +2,16 @@
 //!
 //! Verifies that [`with_signer`][polar_bear_rig_hft::onchain::signer::with_signer]
 //! provides task-local isolation across concurrent Tokio tasks, and that
-//! [`simulate_swap`][polar_bear_rig_hft::onchain::jupiter::simulate_swap]
+//! `simulate_swap`,`polar_bear_rig_hft::onchain::jupiter::simulate_swap`]
 //! returns a properly formed dry-run result.
 
-use polar_bear_rig_hft::onchain::{
-    jupiter,
-    signer::{LocalSolanaSigner, with_signer},
+use polar_bear_rig_hft::{
+    onchain::{
+        jupiter,
+        signer::{LocalSolanaSigner, with_signer},
+    },
+    sor::router::Route,
 };
-use polar_bear_rig_hft::sor::router::Route;
 
 // ── helper ────────────────────────────────────────────────────────────────────
 

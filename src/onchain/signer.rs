@@ -18,12 +18,13 @@
 //! with `rig_onchain_kit::signer::SignerContext` once that crate is published
 //! to crates.io.
 
+use std::sync::Arc;
+
 use anyhow::Result;
 use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
 };
-use std::sync::Arc;
 use tracing::info;
 
 use crate::config::Config;
@@ -127,8 +128,7 @@ where
 ///
 /// # Arguments
 ///
-/// * `_cfg` - Runtime configuration (reserved for future credential loading;
-///   currently unused).
+/// * `_cfg` - Runtime configuration (reserved for future credential loading; currently unused).
 ///
 /// # Errors
 ///

@@ -5,8 +5,9 @@
 //! effective cost, and returns the cheapest [`Route`]. End-to-end wall-clock
 //! latency is measured and stored in [`Route::latency_ms`].
 
-use anyhow::Result;
 use std::time::Instant;
+
+use anyhow::Result;
 use tracing::info;
 
 /// A price quote from a single DEX venue - the core output of a venue query.
@@ -45,8 +46,8 @@ pub struct Route {
 /// # Arguments
 ///
 /// * `pair`   - Trading pair, e.g. `"SOL/USDC"`.
-/// * `amount` - Base-token amount (passed to venue adapters for slippage
-///   estimation in production; informational in this demo).
+/// * `amount` - Base-token amount (passed to venue adapters for slippage estimation in production;
+///   informational in this demo).
 ///
 /// # Errors
 ///

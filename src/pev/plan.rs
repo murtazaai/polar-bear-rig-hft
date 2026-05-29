@@ -1,23 +1,23 @@
 //! PLAN phase - trade decomposition via a cheap LLM.
 //!
 //! Uses `claude-haiku-4-5` (the lowest-cost Anthropic model) to decompose a
-//! high-level trade request into exactly four atomic `types::TradeTask` objects,
+//! high-level trade request into exactly four atomic [`TradeTask`] objects,
 //! returned as a JSON array.
 //!
-//! When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true` (no
-//! API key or `--skip-llm` flag), the function returns `default_tasks`
-//! directly without making any network call.
+//! When [`crate::config::Config::skip_llm`] is `true` (no API key or
+//! `--skip-llm` flag), the function returns [`default_tasks_pub`] directly
+//! without making any network call.
 //!
-//! When the LLM response cannot be parsed, `default_tasks` is used as a
+//! When the LLM response cannot be parsed, [`default_tasks_pub`] is used as a
 //! deterministic fallback so the PEV pipeline always continues forward.
 //!
 //! ## Rig client trait requirements (rig-core ≥ 0.36)
 //!
 //! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
+//!
 //! - [`rig::client::CompletionClient`] - provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] - required by the rig provider-client pattern;
-//!   omitting either causes `E0599: no method named 'agent'` even though the type
-//!   implements both traits.
+//! - [`rig::client::ProviderClient`] - required by the rig provider-client pattern; omitting either
+//!   causes `E0599: no method named 'agent'`.
 
 use anyhow::Result;
 use rig::{
@@ -46,14 +46,14 @@ simulate_execution.
 
 /// Decompose a trade request into a [`Vec`] of [`TradeTask`] items.
 ///
-/// When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true`
-/// (either because `ANTHROPIC_API_KEY` is absent or because `--skip-llm` was
-/// passed), returns [`default_tasks_pub`] immediately with no network call.
+/// When [`crate::config::Config::skip_llm`] is `true` (either because
+/// `ANTHROPIC_API_KEY` is absent or because `--skip-llm` was passed), returns
+/// [`default_tasks_pub`] immediately with no network call.
 ///
 /// Otherwise calls the Haiku model via `rig-core` with `PLAN_PREAMBLE` and a
 /// prompt containing the pair and amount.  The response is stripped of any
 /// accidental Markdown fences before deserialisation.  On JSON parse failure
-/// the function falls back to `default_tasks` so the pipeline is never
+/// the function falls back to [`default_tasks_pub`] so the pipeline is never
 /// blocked.
 ///
 /// # Arguments
@@ -66,18 +66,16 @@ simulate_execution.
 ///
 /// Returns `Err` if `anthropic::Client::new` fails or the LLM HTTP call fails
 /// (network error, authentication failure, etc.).  A malformed JSON response is
-/// handled internally by falling back to `default_tasks`.
+/// handled internally by falling back to [`default_tasks_pub`].
 pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<TradeTask>> {
     info!(pair, amount, "[PLAN] Decomposing trade task");
 
-    // ── Stub path ─────────────────────────────────────────────────────────
     if cfg.skip_llm {
         info!("[PLAN] skip_llm=true - returning default tasks (offline stub)");
         return Ok(default_tasks(pair, amount));
     }
 
-    // ── Live LLM path ─────────────────────────────────────────────────────
-    // Client::new is fallible in rig-core 0.36+ - unwrap with `?`.
+    // Client::new is fallible in rig-core 0.36+.
     // Haiku is chosen deliberately: cheapest model per the PEV cost model.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let planner = client
@@ -110,11 +108,11 @@ pub async fn decompose(cfg: &Config, pair: &str, amount: f64) -> Result<Vec<Trad
     Ok(tasks)
 }
 
-/// Public alias for `default_tasks`, exposed for integration tests and the
-/// stub path.
+/// Public alias for the deterministic four-task breakdown.
 ///
-/// Returns the canonical four-task breakdown for any pair and amount without
-/// making any LLM network call.
+/// Exposed for integration tests and the stub path.  Returns the canonical
+/// four-task sequence for any pair and amount without making any LLM network
+/// call.
 pub fn default_tasks_pub(pair: &str, amount: f64) -> Vec<TradeTask> {
     default_tasks(pair, amount)
 }

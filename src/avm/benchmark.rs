@@ -16,6 +16,7 @@
 //! > differ depending on instruction mix, cache state, and hardware.
 
 use std::time::Instant;
+
 use tracing::info;
 
 /// Run the AVM vs EVM benchmark and log the resulting speedup factor.

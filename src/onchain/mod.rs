@@ -3,10 +3,9 @@
 //! Exposes two public entry points consumed by `crate::main`:
 //!
 //! * [`execute_swap`] - wraps a Jupiter swap simulation inside an isolated
-//!   [`signer::LocalSolanaSigner`] context and returns a
-//!   [`jupiter::SwapResult`].
-//! * [`demo_signer`] - spawns three concurrent tasks to demonstrate that
-//!   the task-local signer storage is fully isolated per task.
+//!   [`signer::LocalSolanaSigner`] context and returns a [`jupiter::SwapResult`].
+//! * [`demo_signer`] - spawns three concurrent tasks to demonstrate that the task-local signer
+//!   storage is fully isolated per task.
 //!
 //! ## Security boundary
 //!
@@ -22,11 +21,10 @@ pub mod signer;
 pub mod types;
 
 use anyhow::Result;
+use jupiter::SwapResult;
 use tracing::info;
 
-use crate::config::Config;
-use crate::sor::router::Route;
-use jupiter::SwapResult;
+use crate::{config::Config, sor::router::Route};
 
 /// Execute a swap for the given route inside an isolated signer context.
 ///
@@ -42,8 +40,7 @@ use jupiter::SwapResult;
 ///
 /// * `cfg`   - Runtime configuration (provides the RPC URL and dry-run flag).
 /// * `route` - The SOR-selected venue and price quote to execute against.
-/// * `live`  - `true` to attempt a real transaction; `false` (default) for
-///   dry-run simulation.
+/// * `live`  - `true` to attempt a real transaction; `false` (default) for dry-run simulation.
 ///
 /// # Errors
 ///

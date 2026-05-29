@@ -1,8 +1,9 @@
 # Contributing to polar-bear-rig-hft
 
-> **Polar Bear Systems** · Technology Lead: Murtaza Ali Imtiaz  
-> This repository is published under a restricted proprietary licence for
-> portfolio and reference purposes. See [LICENSE-PBS](./LICENSE-PBS) for permitted use.
+> **Polar Bear Systems** · Technology Lead: Murtaza Ali Imtiaz
+>
+> Licensed under [MIT OR Apache-2.0](LICENSE-MIT). Contributions are welcome
+> under the same dual licence.
 
 ---
 
@@ -18,11 +19,11 @@
 
 ### Setup
 
-```text
-git clone https://github.com/murtazaai/polar-bear-rig-hft
+```bash
+git clone https://github.com/polarbearsystems/polar-bear-rig-hft
 cd polar-bear-rig-hft
 cp .env.example .env
-# Edit .env: set ANTHROPIC_API_KEY=sk-ant-...
+# Edit .env: optionally set ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ---
@@ -31,14 +32,14 @@ cp .env.example .env
 
 ### Build
 
-```text
+```bash
 cargo build           # debug
 cargo build --release # optimised (use for benchmarks)
 ```
 
 ### Run
 
-```text
+```bash
 # Full pipeline (dry-run)
 cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
 
@@ -51,7 +52,7 @@ cargo run --release -- --mode reactor
 
 ### Examples
 
-```text
+```bash
 cargo run --example sor_demo
 cargo run --example signer_demo
 cargo run --example avm_demo --release
@@ -60,24 +61,25 @@ cargo run --example jupiter_dry_run
 
 ### Tests (no API key required)
 
-```text
+```bash
 cargo test                   # all deterministic tests
+SKIP_LLM=1 cargo test        # explicit offline mode
 cargo test --test test_sor   # specific test file
 ```
 
 ### Live provider tests (API key required)
 
-```text
+```bash
 ANTHROPIC_API_KEY=sk-ant-... cargo test --test providers -- --ignored --test-threads=1
 ```
 
 ### Format, lint, docs
 
-```text
-cargo fmt --all                      # format
-cargo clippy --all-targets           # lint
-cargo doc --open                     # browse API docs
-RUSTDOCFLAGS="--cfg docsrs" cargo doc # with docsrs conditional items
+```bash
+cargo fmt --all                                      # format
+cargo clippy --all-targets -- -D warnings            # lint (CI-strict)
+cargo doc --open                                     # browse API docs
+RUSTDOCFLAGS="--cfg docsrs" cargo doc                # with docsrs conditional items
 ```
 
 ---
@@ -85,13 +87,16 @@ RUSTDOCFLAGS="--cfg docsrs" cargo doc # with docsrs conditional items
 ## Code style
 
 - **Edition**: Rust 2024
+- **MSRV**: 1.93.1 (enforced by `rust-version` in `Cargo.toml` and `msrv` in
+  `.clippy.toml`)
 - **Max line width**: 100 characters (enforced by `rustfmt.toml`)
-- **Imports**: `use rig::client::CompletionClient` - both traits are
-  required to call `.agent()` on any rig-core 0.36+ Anthropic client
-- **Doc comments**: `//!` for module-level docs; `///` for items; never `///` or `/** */`
-  on macro invocation sites (triggers `unused_doc_comments`)
-- **Error handling**: always `anyhow::Result`; propagate with `?`; no `unwrap` in library
-  code
+- **Imports**: use the multi-line form for `rig` imports; both
+  `rig::client::CompletionClient` and `rig::client::ProviderClient` must be imported
+  when calling `.agent()` on any rig-core 0.36+ Anthropic client
+- **Doc comments**: `//!` for module-level docs; `///` for items; never `///` on
+  macro invocation sites (triggers `unused_doc_comments`)
+- **Error handling**: always `anyhow::Result`; propagate with `?`; no `unwrap` in
+  library code
 
 ---
 
@@ -108,11 +113,26 @@ RUSTDOCFLAGS="--cfg docsrs" cargo doc # with docsrs conditional items
 
 ## CI
 
-The CI pipeline (`.github/workflows/ci.yml`) runs on every push and pull request:
+The CI pipeline runs on every push and pull request to `main`:
 
-1. `rustfmt --check` - enforces code style
-2. `clippy -D warnings` - enforces lint rules
+1. `cargo fmt --all -- --check` - enforces code style
+2. `cargo clippy --all-targets -- -D warnings` - enforces lint rules
 3. `cargo build --release` - ensures the release binary compiles
-4. `cargo test --workspace` - runs all deterministic tests
-5. `cargo doc` - ensures documentation compiles without warnings
+4. `SKIP_LLM=1 cargo test --workspace` - runs all deterministic tests
+5. `RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc` - ensures documentation
+   compiles without warnings
 6. MSRV check against Rust 1.93.1
+
+---
+
+## Publishing
+
+```bash
+# Verify the published package looks correct (no upload)
+cargo publish --dry-run
+
+# Publish to crates.io
+cargo publish
+```
+
+Set a crates.io API token via `cargo login` or `CARGO_REGISTRY_TOKEN`.

@@ -1,12 +1,12 @@
 //! EXECUTE phase - agentic task execution via Sonnet.
 //!
-//! Each `types::TradeTask` is handed to a `claude-sonnet-4-6` agent that
-//! reasons step-by-step and invokes the appropriate tool.  Tool calls are
-//! simulated in this demo; in production they would be real `rig-core`
-//! [`rig::tool::Tool`] implementations backed by live market data APIs.
+//! Each [`TradeTask`] is handed to a `claude-sonnet-4-6` agent that reasons
+//! step-by-step and invokes the appropriate tool.  Tool calls are simulated in
+//! this demo; in production they would be real [`rig::tool::Tool`]
+//! implementations backed by live market data APIs.
 //!
-//! When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true` (no
-//! API key or `--skip-llm` flag), the function returns a deterministic stub
+//! When [`crate::config::Config::skip_llm`] is `true` (no API key or
+//! `--skip-llm` flag), the function returns a deterministic stub
 //! [`ExecuteOutput`] without any network call.
 //!
 //! Sonnet is the most capable - and most expensive - model in the PEV
@@ -16,10 +16,10 @@
 //! ## Rig client trait requirements (rig-core ≥ 0.36)
 //!
 //! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
+//!
 //! - [`rig::client::CompletionClient`] - provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] - required by the rig provider-client pattern;
-//!   omitting either causes `E0599: no method named 'agent'` even though the type
-//!   implements both traits.
+//! - [`rig::client::ProviderClient`] - required by the rig provider-client pattern; omitting either
+//!   causes `E0599: no method named 'agent'`.
 
 use anyhow::Result;
 use rig::{
@@ -46,8 +46,8 @@ Think step-by-step. Call the appropriate tool. Return a concise result string.
 
 /// Execute a single [`TradeTask`] using the Sonnet agent.
 ///
-/// When [`Config::skip_llm`][crate::config::Config::skip_llm] is `true`
-/// returns a deterministic stub output immediately with no network call.
+/// When [`crate::config::Config::skip_llm`] is `true` returns a deterministic
+/// stub output immediately with no network call.
 ///
 /// Otherwise builds a structured prompt from the task fields, sends it to
 /// `claude-sonnet-4-6`, and maps the [`TradeAction`] variant to a list of
@@ -65,14 +65,12 @@ Think step-by-step. Call the appropriate tool. Return a concise result string.
 pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
     info!(task_id = %task.id, action = ?task.action, "[EXECUTE] Running task");
 
-    // ── Stub path ─────────────────────────────────────────────────────────
     if cfg.skip_llm {
         info!(task_id = %task.id, "[EXECUTE] skip_llm=true - returning stub output");
         return Ok(stub_output(task));
     }
 
-    // ── Live LLM path ─────────────────────────────────────────────────────
-    // Client::new is fallible in rig-core 0.36+ - unwrap with `?`.
+    // Client::new is fallible in rig-core 0.36+.
     // Sonnet is chosen for the Execute phase: best reasoning + tool-use capability.
     let client = anthropic::Client::new(&cfg.anthropic_api_key)?;
     let executor = client
@@ -90,7 +88,6 @@ pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
     debug!(raw = %response, task_id = %task.id, "[EXECUTE] Raw response");
 
     // Map each action to its canonical tool call for the audit log.
-    // In production these would be real rig::tool::Tool invocations.
     let tool_calls = action_tool_calls(&task.action);
     for tool in &tool_calls {
         info!(tool = %tool, "[EXECUTE] Tool called");
@@ -107,7 +104,7 @@ pub async fn run_task(cfg: &Config, task: &TradeTask) -> Result<ExecuteOutput> {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-/// Build a deterministic stub [`ExecuteOutput`] for offline/no-key runs.
+/// Build a deterministic stub [`ExecuteOutput`] for offline / no-key runs.
 fn stub_output(task: &TradeTask) -> ExecuteOutput {
     let result = format!(
         "[STUB] Task {} ({:?}) executed offline. Pair: {}, Amount: {}",

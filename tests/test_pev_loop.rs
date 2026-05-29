@@ -5,8 +5,10 @@
 //! deterministic, pure-Rust code paths.  They pass with or without
 //! `ANTHROPIC_API_KEY` in the environment.
 
-use polar_bear_rig_hft::config::Config;
-use polar_bear_rig_hft::pev::types::{ExecuteOutput, TradeAction, TradeTask};
+use polar_bear_rig_hft::{
+    config::Config,
+    pev::types::{ExecuteOutput, TradeAction, TradeTask},
+};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

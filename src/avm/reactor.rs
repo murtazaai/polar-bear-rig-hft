@@ -4,19 +4,18 @@
 //! Reactor GUI deployed by Polar Bear Systems for smart contract deployments.
 //! The log captures three sequential phases:
 //!
-//! 1. **STATE BEFORE** - wallet balance and AMM pool conditions prior to
-//!    execution.
-//! 2. **EXECUTION** - method called, compute-unit estimate, AVM JIT mode, and
-//!    transaction signature.
-//! 3. **STATE AFTER** - resulting balance, tokens received, fee paid, and
-//!    final status.
+//! 1. **STATE BEFORE** - wallet balance and AMM pool conditions prior to execution.
+//! 2. **EXECUTION** - method called, compute-unit estimate, AVM JIT mode, and transaction
+//!    signature.
+//! 3. **STATE AFTER** - resulting balance, tokens received, fee paid, and final status.
 //!
 //! In production this module would write to a persistent audit store (e.g. a
 //! Postgres time-series table). In this demo it emits structured fields to the
 //! [`tracing`] subscriber at `INFO` level.
 
-use crate::{onchain::jupiter::SwapResult, sor::router::Route};
 use tracing::info;
+
+use crate::{onchain::jupiter::SwapResult, sor::router::Route};
 
 /// Emit a full Reactor GUI audit log for one completed swap execution.
 ///

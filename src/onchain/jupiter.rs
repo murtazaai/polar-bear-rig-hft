@@ -56,8 +56,8 @@ pub struct SwapResult {
 ///
 /// * `route`   - The SOR-selected venue (venue name, effective price, fee).
 /// * `amount`  - Base-token amount to swap.
-/// * `dry_run` - `true` to simulate only; `false` to attempt a live
-///   transaction (currently unimplemented in this demo).
+/// * `dry_run` - `true` to simulate only; `false` to attempt a live transaction (currently
+///   unimplemented in this demo).
 ///
 /// # Errors
 ///

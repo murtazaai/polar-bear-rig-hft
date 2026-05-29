@@ -107,6 +107,32 @@ cargo run --release -- --mode full --skip-llm --pair SOL/USDC --amount 1.0
 cargo run --release -- --mode full --pair SOL/USDC --amount 1.0
 ```
 
+### As a library dependency
+
+```toml
+[dependencies]
+polar-bear-rig-hft = "0.1"
+```
+
+```rust
+use polar_bear_rig_hft::{config::Config, pev, sor};
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let cfg = Config::from_env()?;
+
+    // Smart Order Routing - always works, no API key needed
+    let route = sor::best_route("SOL/USDC", 1.0).await?;
+    println!("Best venue: {} @ {:.4} USDC", route.venue, route.effective_price);
+
+    // PEV loop - uses offline stubs when ANTHROPIC_API_KEY is absent
+    let result = pev::run(&cfg, "SOL/USDC", 1.0).await?;
+    println!("PEV passed: {} (score={:.2})", result.passed, result.verify_score);
+
+    Ok(())
+}
+```
+
 ---
 
 ## CLI Reference
@@ -149,7 +175,7 @@ Every subsystem runs without an `ANTHROPIC_API_KEY`. When a key is absent (or
 | **Execute** | Sonnet reasons and calls tools | Returns fixed `ExecuteOutput`; confidence = 0.90 |
 | **Verify** | Haiku scores against criteria | Returns score = 0.90, feedback = "all criteria assumed met" |
 
-SOR, SignerContext, Jupiter dry-run, and AVM benchmark are unaffected - they never
+SOR, `SignerContext`, Jupiter dry-run, and AVM benchmark are unaffected - they never
 require an API key.
 
 Stub mode is activated by **any** of the following:
@@ -162,8 +188,7 @@ Stub mode is activated by **any** of the following:
 | `SKIP_LLM=1` set permanently in `.env` | Always-on for a whole checkout |
 
 > **Important - `cargo test`:** `--skip-llm` is a flag for the compiled binary's clap
-> parser. **Never** pass it after `--` in a `cargo test` invocation - the test harness
-> uses getopts and will reject it with "Unrecognised option: 'skip-llm'".
+> parser. **Never** pass it after `--` in a `cargo test` invocation.
 >
 > ```text
 > cargo test -- --skip-llm   # ✗ WRONG - test harness rejects it
@@ -175,8 +200,7 @@ Stub mode is activated by **any** of the following:
 ## Environment Variables
 
 All variables are optional. `Config::from_env()` is infallible - every variable has a
-safe default. Call `dotenvy::dotenv()` first (done automatically by `main.rs`) to pick up
-`.env` from disk.
+safe default.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -184,7 +208,7 @@ safe default. Call `dotenvy::dotenv()` first (done automatically by `main.rs`) t
 | `SKIP_LLM` | `false` | Set to `1` or `true` to force stub mode even when a key is present. |
 | `SOLANA_RPC_URL` | `https://api.devnet.solana.com` | Solana JSON-RPC endpoint. |
 | `SOLANA_PRIVATE_KEY` | `DEMO_KEY_PLACEHOLDER` | Base-58 encoded keypair for signing. In production load from a secrets manager. |
-| `DRY_RUN` | `true` | When `true`, all on-chain operations are simulated and no real transactions are signed or broadcast. |
+| `DRY_RUN` | `true` | When `true`, all on-chain operations are simulated and no real transactions are broadcast. |
 
 Log level defaults to `polar_bear_rig_hft=debug`. Override at runtime:
 
@@ -206,7 +230,7 @@ The PEV loop governs every trade decision. A single `pev::run()` call:
    |---|---|---|
    | `T001` | `analyse_market` | Market data retrieved |
    | `T002` | `select_route` | Best DEX venue selected |
-   | `T003` | `validate_slippage` | Slippage within 0.5 % tolerance |
+   | `T003` | `validate_slippage` | Slippage within 0.5% tolerance |
    | `T004` | `simulate_execution` | Dry-run swap simulation logged |
 
 2. **EXECUTE** - `claude-sonnet-4-6` processes each task, invoking the mapped tool:
@@ -224,7 +248,7 @@ The PEV loop governs every trade decision. A single `pev::run()` call:
    - Max retries per task: **2**
 
 Cost model: Haiku handles cheap plan and verify work; Sonnet is reserved for
-reasoning-heavy execution. This cuts LLM cost by roughly 60–70 % compared with an
+reasoning-heavy execution. This cuts LLM cost by roughly 60–70% compared with an
 all-Sonnet pipeline.
 
 ---
@@ -240,29 +264,33 @@ effective_cost = price × (1 + fee_bps / 10_000)
 
 | Venue | Price (SOL/USDC) | Fee | Price impact | Simulated latency |
 |---|---|---|---|---|
-| Raydium | 143.52 | 25 bps | 0.03 % | 12 ms |
-| Orca | 143.48 | 30 bps | 0.02 % | 9 ms |
-| Serum (OpenBook) | 143.61 | 20 bps | 0.05 % | 15 ms |
+| Raydium | 143.52 | 25 bps | 0.03% | 12 ms |
+| Orca | 143.48 | 30 bps | 0.02% | 9 ms |
+| Serum (OpenBook) | 143.61 | 20 bps | 0.05% | 15 ms |
 
-If all venue queries fail, a `Raydium-fallback` route is returned so the
-pipeline is never blocked.
+If all venue queries fail, a `Raydium-fallback` route is returned so the pipeline is
+never blocked.
 
 ---
 
 ## On-chain Execution & SignerContext
 
-### SignerContext (`src/onchain/signer.rs`)
+### `SignerContext` (`src/onchain/signer.rs`)
 
-Uses `tokio::task_local!` to scope a `solana_sdk::signature::Keypair` to exactly
-one Tokio task. Multiple concurrent trades cannot share or leak each other's signing
-keys, with no mutex overhead.
+Uses `tokio::task_local!` to scope a `solana_sdk::signature::Keypair` to exactly one
+Tokio task. Multiple concurrent trades cannot share or leak each other's signing keys,
+with no mutex overhead.
 
 ```rust
+use polar_bear_rig_hft::onchain::signer::{LocalSolanaSigner, with_signer};
+
+# async fn example() -> anyhow::Result<()> {
 let signer = LocalSolanaSigner::from_env();
 let result = with_signer(signer, || async {
     // CURRENT_SIGNER is only visible inside this async block
-    Ok::<_, anyhow::Error>(execute_trade().await?)
-}).await?;
+    Ok::<&str, anyhow::Error>("swap executed")
+   }).await?;
+# Ok(()) }
 ```
 
 ### Jupiter Swap Simulation (`src/onchain/jupiter.rs`)
@@ -275,8 +303,8 @@ fee_paid      = input_amount × fee_bps / 10_000
 simulated_sig = "SIM_" + 16-char random hex
 ```
 
-`is_dry_run = true` is always set in demo mode. Pass `--live` to the binary to
-attempt live mode (currently returns `Err` - production wiring is in progress).
+`is_dry_run = true` is always set in demo mode. Pass `--live` to attempt live mode
+(returns `Err` in this demo build - production wiring is in progress).
 
 ---
 
@@ -328,10 +356,10 @@ cp .env.example .env
 ### Build commands
 
 ```bash
-cargo build                 # debug build (CARGO_INCREMENTAL=1)
-cargo build --release       # optimised - required for meaningful benchmark timing
-cargo check --all-targets   # type-check only, no linking (fastest feedback)
-cargo clean                 # remove target/
+cargo build                  # debug build
+cargo build --release        # optimised - required for meaningful benchmark timing
+cargo check --all-targets    # type-check only, no linking (fastest feedback)
+cargo clean                  # remove target/
 ```
 
 **Release profile** (`Cargo.toml`):
@@ -353,7 +381,6 @@ All tests in `tests/*.rs` are fully deterministic and pass without an API key.
 cargo test                                    # all deterministic tests
 SKIP_LLM=1 cargo test                         # explicit offline mode
 cargo test -- --nocapture                     # with log output to stdout
-cargo test -- --test-threads=8               # parallel (default)
 cargo test --test test_avm_benchmark          # single file
 cargo test --test test_pev_loop               # single file
 cargo test --test test_signer_context         # single file
@@ -367,60 +394,12 @@ ANTHROPIC_API_KEY=sk-ant-... \
     cargo test --test providers -- --ignored --test-threads=1
 ```
 
-Use `--test-threads=1` to avoid concurrent requests hitting rate limits.
-
-### Full test inventory
-
-#### `tests/test_pev_loop.rs` - unit + stub integration (10 tests)
-
-| Test | Asserts |
-|---|---|
-| `test_config_from_env_succeeds_without_key` | `from_env()` never returns `Err`; `skip_llm == !has_api_key()` |
-| `test_config_has_api_key_empty` | empty key → `has_api_key() == false` |
-| `test_config_has_api_key_present` | non-empty key → `has_api_key() == true` |
-| `test_pev_run_stub_mode_passes` | full loop, `skip_llm=true` → `passed=true`; 4 tasks, 4 outputs |
-| `test_plan_decompose_stub_mode` | stub returns 4 tasks; amount preserved |
-| `test_verify_score_stub_mode` | stub score ≥ 0.80; feedback contains "stub" |
-| `test_plan_default_tasks_count` | `default_tasks_pub` returns exactly 4 tasks |
-| `test_verify_pass_threshold` | `PASS_THRESHOLD == 0.80` |
-| `test_trade_task_serialization` | JSON round-trip preserves pair and action |
-| `test_execute_output_tool_calls` | `tool_calls` is non-empty and references the correct tool |
-
-#### `tests/test_sor.rs` - async integration (3 tests)
-
-| Test | Asserts |
-|---|---|
-| `test_best_route_returns_known_venue` | venue ∈ {Raydium, Orca, Serum}; price > 0; fee\_bps > 0 |
-| `test_sor_latency_recorded` | `latency_ms > 0` |
-| `test_cost_ordering_lower_fee_wins` | cost formula correct |
-
-#### `tests/test_signer_context.rs` - async integration (2 tests)
-
-| Test | Asserts |
-|---|---|
-| `test_signer_context_isolation` | 2 concurrent tasks; independent signers; no error |
-| `test_jupiter_dry_run_returns_simulated_sig` | `is_dry_run=true`; sig starts with `SIM_`; output > 0 |
-
-#### `tests/test_avm_benchmark.rs` - unit (1 test)
-
-| Test | Asserts |
-|---|---|
-| `test_benchmark_completes_without_error` | `run_benchmark()` returns `Ok(())` |
-
-#### `tests/providers/anthropic.rs` - live, `#[ignore]` (2 tests)
-
-| Test | Asserts |
-|---|---|
-| `test_live_plan_decomposes_four_tasks` | Haiku returns 4 tasks with correct pair and amount |
-| `test_live_pev_loop_passes` | full loop passes with score ≥ 0.80 |
-
 ### Lint, format, docs
 
 ```bash
 cargo fmt --all                                      # apply formatting (rustfmt.toml)
 cargo fmt --all -- --check                           # CI format check
 cargo clippy --all-targets -- -D warnings            # lint in CI mode (zero warnings)
-cargo clippy --all-targets --fix --allow-dirty       # auto-fix suggestions
 cargo doc --open --document-private-items            # browse rustdoc locally
 RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc   # CI docs check
 ```
@@ -464,8 +443,8 @@ Three project-local config files are provided for [Zed](https://zed.dev):
 | File | Contents |
 |---|---|
 | `.zed/settings.json` | rust-analyzer tuned to `rustfmt.toml` and `.clippy.toml`; format-on-save; inlay hints; import grouping matching `imports_granularity = "Crate"` |
-| `.zed/tasks.json` | 29 tasks covering build, test (per-file + live providers), lint, fmt, doc, run (all 5 modes), all 4 examples, and a one-shot local CI simulation |
-| `.zed/debug.json` | 15 CodeLLDB debug configurations: all binary modes (dev + release), all 4 integration test files (via `--no-run` + glob program path), and tooling checks |
+| `.zed/tasks.json` | tasks covering build, test (per-file + live providers), lint, fmt, doc, run (all 5 modes), all 4 examples, and a one-shot local CI simulation |
+| `.zed/debug.json` | CodeLLDB debug configurations: all binary modes (dev + release), all 4 integration test files (via `--no-run` + glob program path), and tooling checks |
 
 ---
 
@@ -488,31 +467,19 @@ Three project-local config files are provided for [Zed](https://zed.dev):
 
 ```
 polar-bear-rig-hft/
-├── Cargo.toml              Rust 2024; MSRV 1.93.1; all deps; [lints] table
-├── Cargo.lock              Committed (binary crate)
+polar-bear-rig-hft/
+├── Cargo.toml              Rust 2024; MSRV 1.93.1; all deps; [lints] table; [lib]
 ├── rustfmt.toml            100-col, Rust 2024 edition, crate-level import grouping
-├── .clippy.toml            MSRV 1.93.1, cognitive-complexity 30, API-breakage protection
+├── .clippy.toml            MSRV 1.93.1, cognitive-complexity 30
 ├── .env.example            All optional env vars (ANTHROPIC_API_KEY, SOLANA_RPC_URL, …)
-├── .gitignore              Focused Rust-only ignore file
-├── LICENSE-PBS             Proprietary licence - Polar Bear Systems
+├── LICENSE-MIT             MIT licence
+├── LICENSE-APACHE          Apache 2.0 licence
 ├── README.md               This file
-├── CHANGELOG.md            All 18 bug fixes + version history
-├── BUG-FIXES.md            Root-cause analysis for all fixes
+├── CHANGELOG.md            Version history and fix log
 ├── CONTRIBUTING.md         Development workflow and code-style guide
-├── FILE_STRUCTURE.md       Annotated directory tree
 │
 ├── .github/workflows/
 │   └── ci.yml              fmt → clippy → build → test → docs → MSRV
-│
-├── .zed/
-│   ├── settings.json       rust-analyzer, format-on-save, inlay hints
-│   ├── tasks.json          29 Zed tasks (build/test/lint/fmt/doc/run/CI)
-│   └── debug.json          15 CodeLLDB debug configurations
-│
-├── docs/
-│   ├── architecture.md     System architecture deep-dive
-│   ├── star_story.md       Project narrative
-│   └── screen_capture_guide.md
 │
 ├── examples/
 │   ├── sor_demo.rs         SOR across 3 venues - no API key needed
@@ -549,11 +516,11 @@ polar-bear-rig-hft/
 │
 └── tests/
     ├── test_pev_loop.rs        10 tests - Config, PEV stub paths, types
-    ├── test_sor.rs             3 tests  - best_route, cost ordering, latency
-    ├── test_signer_context.rs  2 tests  - SignerContext isolation, Jupiter dry-run
-    ├── test_avm_benchmark.rs   1 test   - benchmark smoke test
+    ├── test_sor.rs              3 tests  - best_route, cost ordering, latency
+    ├── test_signer_context.rs   2 tests  - SignerContext isolation, Jupiter dry-run
+    ├── test_avm_benchmark.rs    1 test   - benchmark smoke test
     └── providers/
-        └── anthropic.rs        2 tests  - live, #[ignore], requires ANTHROPIC_API_KEY
+        └── anthropic.rs         2 tests  - live, #[ignore], requires ANTHROPIC_API_KEY
 ```
 
 ---
@@ -563,15 +530,16 @@ polar-bear-rig-hft/
 | Decision | Rationale |
 |---|---|
 | Lib + bin targets from the same source tree | Integration tests are separate crates; `polar_bear_rig_hft::` is the correct import prefix |
-| Rust 2024 edition | Matches the rig upstream repository; required by MSRV 1.93.1+ |
-| Haiku for Plan + Verify, Sonnet for Execute | 60–70 % cost reduction vs all-Sonnet; Haiku handles structured, low-complexity steps |
-| `CompletionClient` import in all PEV files | Required by rig-core ≥ 0.36 for `.agent()` method resolution (Fixes 16–18) |
-| `Client::new(&key)?` not `Arc::new(Client::new(...))` | `Client::new` is fallible in rig-core 0.36+ (Fix 15) |
-| `tokio::task_local!` with `//` not `///` | rustdoc cannot attach to macro invocation sites - triggers `unused_doc_comments` |
+| Rust 2024 edition | Matches the rig upstream repository |
+| Haiku for Plan + Verify, Sonnet for Execute | 60–70% cost reduction vs all-Sonnet; Haiku handles structured, low-complexity steps |
+| `CompletionClient` + `ProviderClient` in all PEV files | Both required by rig-core ≥ 0.36 for `.agent()` method resolution |
+| `Client::new(&key)?` not `Arc::new(Client::new(...))` | `Client::new` is fallible in rig-core 0.36+ |
+| `tokio::task_local!` with `//` not `///` | rustdoc cannot attach to macro invocation sites |
 | `#[ignore]` on live provider tests | Prevents CI failures when `ANTHROPIC_API_KEY` is absent |
 | `strip = "debuginfo"` in release profile | Smaller binary; mirrors rig's own release profile |
 | `CARGO_INCREMENTAL=0` for release builds | Required when `lto = true` |
 | Fallback route on all-venue failure | Pipeline never blocked by transient DEX outages |
+| `MIT OR Apache-2.0` licence | SPDX-compliant dual licence for crates.io publication |
 
 ---
 
@@ -581,9 +549,9 @@ polar-bear-rig-hft/
 - [Architecture Diagram](./docs/architecture.md) - deep-dive system design
 - [Screen Capture Guide](./docs/screen_capture_guide.md) - key output walkthroughs
 - [Rig Framework](https://rig.rs) · [0xPlaygrounds/rig](https://github.com/0xPlaygrounds/rig)
-- [arc.fun](https://arc.fun) · [Ryzome](https://ryzome.ai)
 - [Solana Program Library](https://spl.solana.com/)
 - [Jupiter Aggregator](https://jup.ag/) · [Raydium](https://raydium.io/) · [Orca](https://www.orca.so/)
+- [arc.fun](https://arc.fun) · [Ryzome](https://ryzome.ai)
 
 ---
 
@@ -591,6 +559,11 @@ polar-bear-rig-hft/
 
 Proprietary - © 2026 Murtaza Ali Imtiaz / Polar Bear Systems  
 See [LICENSE-PBS](LICENSE-PBS) for permitted use.
+
+Licensed under:
+
+- [MIT License](LICENSE-MIT)
+- [Apache License, Version 2.0](LICENSE-APACHE)
 
 ---
 

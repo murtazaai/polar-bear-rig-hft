@@ -27,10 +27,9 @@
 
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
+use polar_bear_rig_hft::{avm, config, onchain, pev, sor};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
-
-use polar_bear_rig_hft::{avm, config, onchain, pev, sor};
 
 /// CLI operating mode - selects which subsystem(s) to exercise.
 #[derive(Debug, Clone, ValueEnum)]

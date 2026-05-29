@@ -1,0 +1,60 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+env:
+    CARGO_TERM_COLOR: always
+    CARGO_INCREMENTAL: 0 # required when lto = true
+    RUSTFLAGS: "-D warnings"
+
+jobs:
+    ci:
+        name: CI - ${{ matrix.rust }}
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                rust: [stable, "1.93.1"] # stable + MSRV
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install Rust ${{ matrix.rust }}
+              uses: dtolnay/rust-toolchain@master
+              with:
+                  toolchain: ${{ matrix.rust }}
+                  components: rustfmt, clippy
+
+            - name: Cache cargo registry
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cargo/registry/index
+                      ~/.cargo/registry/cache
+                      ~/.cargo/git/db
+                      target
+                  key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
+                  restore-keys: ${{ runner.os }}-cargo-${{ matrix.rust }}-
+
+            - name: Format check
+              if: matrix.rust == 'stable'
+              run: cargo fmt --all -- --check
+
+            - name: Clippy
+              if: matrix.rust == 'stable'
+              run: cargo clippy --all-targets -- -D warnings
+
+            - name: Build (release)
+              run: cargo build --release
+
+            - name: Tests (offline stub mode)
+              run: SKIP_LLM=1 cargo test --workspace
+
+            - name: Docs
+              if: matrix.rust == 'stable'
+              env:
+                  RUSTDOCFLAGS: "--cfg docsrs -D warnings"
+              run: cargo doc --no-deps
