@@ -2,6 +2,8 @@
 
 **Optimal High-Frequency Trading Platform - Rig (Rust Inference Gateway / ARC)**
 
+[![Crates.io](https://img.shields.io/crates/v/polar-bear-rig-hft.svg)](https://crates.io/crates/polar-bear-rig-hft)
+[![Docs.rs](https://docs.rs/polar-bear-rig-hft/badge.svg)](https://docs.rs/polar-bear-rig-hft)
 [![Rust](https://img.shields.io/badge/rust-1.93.1%2B-orange.svg)](https://www.rust-lang.org/)
 [![Edition](https://img.shields.io/badge/edition-2024-blue.svg)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 [![rig-core](https://img.shields.io/badge/rig--core-%5E0.36-purple.svg)](https://rig.rs)

@@ -494,7 +494,7 @@
         ]
     },
     // ══════════════════════════════════════════════════════════════════════════
-    // § CI – full local simulation (mirrors .github/workflows/ci.yml order)
+    // § publish · full publish simulation — fix everything it flags
     // ══════════════════════════════════════════════════════════════════════════
     {
         "label": "publish · full publish simulation — fix everything it flags",
@@ -502,6 +502,16 @@
         "args": [
             "publish",
             "--dry-run",
+        ],
+        "tags": [
+            "publish"
+        ]
+    },
+    {
+        "label": "publish · full publish",
+        "command": "cargo",
+        "args": [
+            "publish",
         ],
         "tags": [
             "publish"
