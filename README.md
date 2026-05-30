@@ -10,7 +10,7 @@
 [![Solana](https://img.shields.io/badge/solana-devnet%2Fmainnet-9945FF.svg)](https://solana.com)
 [![License: PBS](https://img.shields.io/badge/license-PBS-blue.svg)](LICENSE-PBS)
 
-> **Polar Bear Systems** · Technology Lead: [Murtaza Ali Imtiaz](https://github.com/murtazaai) · July 2019 – Present
+> Built by [Murtaza Ali Imtiaz](https://github.com/murtazaai) · Technology Lead · **Polar Bear Systems** · July 2019 – Present
 
 A production-grade Rust implementation of an LLM-driven HFT agent framework powered by
 [Rig (ARC)](https://rig.rs) - the high-performance enterprise alternative to Python LLM
@@ -571,7 +571,7 @@ Licensed under:
 
 ## Author
 
-**Murtaza Ali Imtiaz** - Technology Lead, Polar Bear Systems (July 2019 – Present)
+**Murtaza Ali Imtiaz** · Technology Lead · **Polar Bear Systems** · (July 2019 – Present)
 
 - GitHub: [@murtazaai](https://github.com/murtazaai)
 - LinkedIn: [linkedin.com/in/murtazai](https://linkedin.com/in/murtazai)
