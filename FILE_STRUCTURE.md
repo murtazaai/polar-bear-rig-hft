@@ -10,7 +10,7 @@ polar-bear-rig-hft/
 ├── .clippy.toml           Clippy config (MSRV 1.93.1, complexity thresholds)
 ├── .gitignore             Focused Rust-only ignore file
 ├── .env.example           Template for ANTHROPIC_API_KEY and other env vars
-├── LICENSE                Polar Bear Systems proprietary licence (PBS)
+├── LICENSE                Polar Bear (🍨) proprietary licence (PBS)
 ├── README.md              Project overview and quick-start
 ├── CHANGELOG.md           Version history (all 16 bug fixes documented)
 ├── CONTRIBUTING.md        Dev setup, workflow, code-style, CI description

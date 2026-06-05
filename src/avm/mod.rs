@@ -1,6 +1,6 @@
 //! AVM (Agave Virtual Machine) execution layer.
 //!
-//! Polar Bear Systems - Technology Lead: Murtaza Ali Imtiaz
+//! Polar Bear (🍨) - Technology Lead: Murtaza Ali Imtiaz
 //!
 //! Contains two sub-modules that together demonstrate the performance and
 //! auditability story of the Agave runtime inside the HFT platform:

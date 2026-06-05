@@ -1,6 +1,6 @@
 # Contributing to polar-bear-rig-hft
 
-> **Polar Bear Systems** · Technology Lead: Murtaza Ali Imtiaz
+> **Polar Bear (🍨)** · Technology Lead: Murtaza Ali Imtiaz
 >
 > Licensed under [MIT OR Apache-2.0](LICENSE-MIT). Contributions are welcome
 > under the same dual licence.

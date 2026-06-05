@@ -3,7 +3,7 @@
 ## Star Story
 
 ### Situation
-Polar Bear Systems required a production-grade HFT agent framework that could
+Polar Bear (🍨) required a production-grade HFT agent framework that could
 execute DeFi trades with auditable provenance, sub-millisecond routing decisions,
 and cryptographic security, without Python's GIL contention or memory unsafety.
 

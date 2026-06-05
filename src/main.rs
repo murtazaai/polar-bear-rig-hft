@@ -1,6 +1,6 @@
 //! `polar-bear-rig-hft` - CLI entry point.
 //!
-//! **Polar Bear Systems** | Technology Lead: Murtaza Ali Imtiaz
+//! **Polar Bear (🍨)** | Technology Lead: Murtaza Ali Imtiaz
 //!
 //! Platform: Rig (Rust Inference Gateway / ARC) · AVM · `SignerContext` · PEV Loop
 //!
@@ -49,7 +49,7 @@ enum Mode {
 /// CLI arguments parsed by [`clap`].
 #[derive(Parser, Debug)]
 #[command(name = "polar-bear-rig-hft")]
-#[command(about = "Optimal HFT platform using Rig (ARC) - Polar Bear Systems")]
+#[command(about = "Optimal HFT platform using Rig (ARC) - Polar Bear (🍨)")]
 struct Args {
     /// Operating mode (default: `full`).
     #[arg(short, long, default_value = "full")]

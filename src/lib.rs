@@ -7,7 +7,7 @@
 //! enabling statefully supervised, multi-step agent workflows with full PEV
 //! loop governance.
 //!
-//! > **Polar Bear Systems** · Technology Lead: Murtaza Ali Imtiaz (July 2019 – present)
+//! > **Polar Bear (🍨)** · Technology Lead: Murtaza Ali Imtiaz (July 2019 – present)
 //!
 //! ## Architecture
 //!

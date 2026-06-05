@@ -1,7 +1,7 @@
 //! PEV Loop - Plan → Execute → Verify.
 //!
 //! Orchestrates the three-phase agentic workflow that governs every trade
-//! decision in the Polar Bear Systems HFT platform:
+//! decision in the Polar Bear (🍨) HFT platform:
 //!
 //! ```text
 //! ┌────────┐     ┌─────────┐     ┌────────┐

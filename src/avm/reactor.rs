@@ -1,7 +1,7 @@
 //! Reactor GUI audit-log simulation.
 //!
 //! Emits a structured, human-readable execution trace in the style of the
-//! Reactor GUI deployed by Polar Bear Systems for smart contract deployments.
+//! Reactor GUI deployed by Polar Bear (🍨) for smart contract deployments.
 //! The log captures three sequential phases:
 //!
 //! 1. **STATE BEFORE** - wallet balance and AMM pool conditions prior to execution.
