@@ -140,13 +140,16 @@ jobs: # Jobs (required)
                   components: clippy, llvm-tools-preview
 
             - name: Cache cargo registry
+              # Only the registry (index + crate tarballs) and git checkouts
+              # are cached.  target/ is intentionally excluded: at ~3 GB it
+              # takes longer to download and extract than a clean rebuild from
+              # a warm registry, and caused step-timeout cancellations.
               uses: actions/cache@v4
               with:
                   path: |
                       ~/.cargo/registry/index
                       ~/.cargo/registry/cache
                       ~/.cargo/git/db
-                      target
                   key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
                   restore-keys: ${{ runner.os }}-cargo-${{ matrix.rust }}-
 
