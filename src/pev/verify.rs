@@ -25,7 +25,7 @@
 //!   causes `E0599: no method named 'agent'`.
 
 use anyhow::Result;
-use rig::{
+use rig_core::{
     client::CompletionClient,
     // client::ProviderClient,
     completion::Prompt,
