@@ -8,6 +8,8 @@
 [![Edition](https://img.shields.io/badge/edition-2024-blue.svg)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 [![rig-core](https://img.shields.io/badge/rig--core-%5E0.36-purple.svg)](https://rig.rs)
 [![Solana](https://img.shields.io/badge/solana-devnet%2Fmainnet-9945FF.svg)](https://solana.com)
+[![CI](https://github.com/murtazaai/polar-bear-rig-hft/actions/workflows/ci.yml/badge.svg)](https://github.com/murtazaai/polar-bear-rig-hft/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/murtazaai/polar-bear-rig-hft/branch/main/graph/badge.svg)](https://codecov.io/gh/murtazaai/polar-bear-rig-hft)
 [![License: PBS](https://img.shields.io/badge/license-PBS-blue.svg)](LICENSE-PBS)
 
 > Built by **[Murtaza Ali Imtiaz](https://github.com/murtazaai)** · Technology Lead · **Polar Bear (🍨)** · July 2019 – Present
@@ -342,9 +344,16 @@ Emits a structured three-phase execution trace at `INFO` level:
 | Requirement | Version | Install |
 |---|---|---|
 | Rust stable | ≥ 1.93.1 (MSRV) | `rustup update stable` |
-| `rustfmt` | bundled with toolchain | `rustup component add rustfmt` |
-| `clippy` | bundled with toolchain | `rustup component add clippy` |
+| Rust nightly | any recent | `rustup toolchain install nightly --component rustfmt` |
+| `clippy` | bundled with stable | `rustup component add clippy` |
+| `llvm-tools-preview` | bundled with stable | `rustup component add llvm-tools-preview` |
+| `cargo-llvm-cov` | latest | `cargo install cargo-llvm-cov --locked` |
 | `ANTHROPIC_API_KEY` | - | Optional. Absent → offline stub mode. Required only for `#[ignore]` live tests. |
+
+> **Note on nightly rustfmt:** `rustfmt.toml` uses nightly-only options
+> (`imports_granularity`, `group_imports`, `wrap_comments`, etc.) gated by
+> `unstable_features = true`. Run `cargo +nightly fmt` locally; the CI `fmt` job
+> handles this automatically.
 
 ### Setup
 
@@ -399,12 +408,38 @@ ANTHROPIC_API_KEY=sk-ant-... \
 ### Lint, format, docs
 
 ```bash
-cargo fmt --all                                      # apply formatting (rustfmt.toml)
-cargo fmt --all -- --check                           # CI format check
+cargo +nightly fmt --all                             # apply formatting (nightly; rustfmt.toml)
+cargo +nightly fmt --all -- --check                  # CI format check (nightly rustfmt)
 cargo clippy --all-targets -- -D warnings            # lint in CI mode (zero warnings)
 cargo doc --open --document-private-items            # browse rustdoc locally
 RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc   # CI docs check
 ```
+
+### Coverage (cargo-llvm-cov)
+
+`rustfmt` uses nightly but all coverage tooling runs on stable.
+
+```bash
+# Install once
+cargo install cargo-llvm-cov --locked
+rustup component add llvm-tools-preview
+
+# Full workspace coverage → lcov.info + coverage-html/
+SKIP_LLM=1 cargo llvm-cov --workspace \
+  --lcov --output-path lcov.info \
+  --ignore-filename-regex 'tests/'
+SKIP_LLM=1 cargo llvm-cov report --html --output-dir coverage-html
+open coverage-html/index.html
+
+# Quick terminal summary
+SKIP_LLM=1 cargo llvm-cov --workspace --summary-only
+
+# Clean stale instrumentation artefacts
+cargo llvm-cov clean --workspace
+```
+
+> All coverage Zed tasks are self-bootstrapping — they install `cargo-llvm-cov` and
+> `llvm-tools-preview` automatically on first run.
 
 ### Running the binary
 
@@ -452,16 +487,38 @@ Three project-local config files are provided for [Zed](https://zed.dev):
 
 ## CI Pipeline
 
-`.github/workflows/ci.yml` runs on every push and pull request to `main`:
+`.github/workflows/ci.yml` runs on every push and pull request to `main`.
+The pipeline has two parallel jobs:
+
+### `fmt` job — nightly rustfmt
+
+Runs independently so the nightly toolchain never interferes with the matrix job.
+`rustfmt.toml` requires `unstable_features = true` and a nightly `rustfmt` binary.
+
+| Step | Command |
+|---|---|
+| 1 | `cargo fmt --all -- --check` (via `dtolnay/rust-toolchain@nightly`) |
+
+### `ci` job — stable + MSRV matrix (`stable`, `1.93.1`)
 
 | Step | Command | What it enforces |
 |---|---|---|
-| 1 | `cargo fmt --all -- --check` | Code style (rustfmt.toml) |
-| 2 | `cargo clippy --all-targets -- -D warnings` | Zero lint warnings |
-| 3 | `cargo build --release` | Release binary compiles |
-| 4 | `SKIP_LLM=1 cargo test --workspace` | All deterministic tests pass |
-| 5 | `RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc` | Docs compile without warnings |
-| 6 | MSRV check | Compiles on Rust 1.93.1 |
+| 1 | `cargo clippy --all-targets -- -D warnings` | Zero lint warnings (stable only) |
+| 2 | `cargo build --release` | Release binary compiles |
+| 3 | `SKIP_LLM=1 cargo test --workspace` | All deterministic tests pass |
+| 4 | `cargo llvm-cov --workspace --lcov …` | Coverage report + `lcov.info` (stable only) |
+| 5 | Upload `coverage-html/` | HTML artifact retained 30 days |
+| 6 | Upload `lcov.info` to Codecov | Skipped silently when `CODECOV_TOKEN` secret is absent |
+| 7 | `RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc` | Docs compile without warnings (stable only) |
+| MSRV | full build + test on `1.93.1` | Minimum supported Rust version enforced |
+
+**Coverage notes:**
+- `llvm-tools-preview` is installed as part of the toolchain component list
+- `cargo-llvm-cov` binary is installed via `taiki-e/install-action@v2`
+- `target/` is intentionally **not** cached — at ~3 GB it causes step-timeout cancellations; the registry cache (~100 MB) is sufficient
+- Codecov upload requires `CODECOV_TOKEN` in **Settings → Secrets → Actions**; the step is skipped cleanly when absent with a `::notice::` annotation in the log
+
+**To enable Codecov:** add `CODECOV_TOKEN` to repo secrets. Get the token from [codecov.io](https://codecov.io) after connecting the repository.
 
 ---
 
@@ -481,7 +538,7 @@ polar-bear-rig-hft/
 ├── CONTRIBUTING.md         Development workflow and code-style guide
 │
 ├── .github/workflows/
-│   └── ci.yml              fmt → clippy → build → test → docs → MSRV
+│   └── ci.yml              fmt (nightly) ∥ clippy → build → test → coverage → docs → MSRV
 │
 ├── examples/
 │   ├── sor_demo.rs         SOR across 3 venues - no API key needed
