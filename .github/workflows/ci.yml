@@ -100,6 +100,25 @@ concurrency: # Concurrency control
 # uses: docker/build-push-action@v5
 
 jobs: # Jobs (required)
+    # ── Format check ─────────────────────────────────────────────────────────
+    # Runs in its own job on nightly so the nightly toolchain never touches
+    # the matrix job.  rustfmt.toml uses nightly-only options
+    # (imports_granularity, group_imports, wrap_comments, etc.) which require
+    # unstable_features = true and a nightly rustfmt binary.
+    fmt:
+        name: fmt (nightly rustfmt)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install nightly rustfmt
+              uses: dtolnay/rust-toolchain@nightly
+              with:
+                  components: rustfmt
+
+            - name: Format check  [nightly rustfmt + rustfmt.toml unstable opts]
+              run: cargo fmt --all -- --check
+
     ci:
         name: CI - ${{ matrix.rust }}
         runs-on: ubuntu-latest
@@ -114,12 +133,11 @@ jobs: # Jobs (required)
               uses: dtolnay/rust-toolchain@master
               with:
                   toolchain: ${{ matrix.rust }}
-                  # llvm-tools-preview is the Rust component that cargo-llvm-cov
-                  # wraps; it must be present before the coverage step runs.
-                  # rustfmt + clippy are only used on stable (gated below), but
-                  # installing them on MSRV too is harmless and avoids a second
-                  # toolchain action call.
-                  components: rustfmt, clippy, llvm-tools-preview
+                  # llvm-tools-preview: required by cargo-llvm-cov (coverage step).
+                  # clippy: used on stable only (gated below); harmless on MSRV.
+                  # rustfmt is intentionally omitted – the fmt check runs in its
+                  # own dedicated `fmt` job under nightly (see above).
+                  components: clippy, llvm-tools-preview
 
             - name: Cache cargo registry
               uses: actions/cache@v4
@@ -131,33 +149,6 @@ jobs: # Jobs (required)
                       target
                   key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
                   restore-keys: ${{ runner.os }}-cargo-${{ matrix.rust }}-
-
-            - name: Install nightly rustfmt
-              # rustfmt.toml uses nightly-only options (imports_granularity,
-              # group_imports, wrap_comments, normalize_comments, etc.) which
-              # require a nightly rustfmt binary.
-              #
-              # dtolnay/rust-toolchain is used here (not `rustup toolchain
-              # install`) because it caches the toolchain tarball via the
-              # actions/cache layer, making the download fast and reliable.
-              # The side-effect is that it sets nightly as the shell default,
-              # so we immediately restore stable with `rustup default` to keep
-              # every subsequent bare `cargo` call on the matrix toolchain.
-              if: matrix.rust == 'stable'
-              uses: dtolnay/rust-toolchain@nightly
-              with:
-                  components: rustfmt
-
-            - name: Restore stable as active toolchain
-              # dtolnay/rust-toolchain@nightly left nightly as the default;
-              # flip it back so clippy, build, test, llvm-cov, and doc all
-              # resolve to the stable toolchain installed in the first step.
-              if: matrix.rust == 'stable'
-              run: rustup default stable
-
-            - name: Format check  [nightly rustfmt, rustfmt.toml unstable opts]
-              if: matrix.rust == 'stable'
-              run: cargo +nightly fmt --all -- --check
 
             - name: Clippy
               if: matrix.rust == 'stable'
