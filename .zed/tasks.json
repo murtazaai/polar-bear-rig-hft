@@ -478,16 +478,150 @@
         ]
     },
     // ══════════════════════════════════════════════════════════════════════════
+    // § COVERAGE  (cargo-llvm-cov)
+    //
+    // Every task below is self-bootstrapping: the ENSURE_LLVM_COV guard runs
+    // once and is a no-op on subsequent calls (cargo install is idempotent
+    // when the binary already exists on PATH).
+    //
+    //   ENSURE_LLVM_COV:
+    //     cargo install cargo-llvm-cov --locked   (installs the subcommand)
+    //     rustup component add llvm-tools-preview  (installs the LLVM tooling)
+    //
+    // You can also run "coverage · install toolchain" once manually first.
+    //
+    // All coverage tasks inject SKIP_LLM=1 so the PEV stub paths activate
+    // without an API key (same reason as the test tasks above).
+    //
+    // Output locations
+    // ────────────────
+    // lcov.info        → editors (Coverage Gutters / cov-lens) + Codecov CI
+    // coverage-html/   → human-readable HTML; open coverage-html/index.html
+    // ══════════════════════════════════════════════════════════════════════════
+    // Shared bootstrap snippet referenced in the comment above each task.
+    // Inline it as a leading shell fragment so every task is self-contained.
+    // ENSURE_LLVM_COV expands to:
+    //   cargo install cargo-llvm-cov --locked && rustup component add llvm-tools-preview
+    {
+        // Run this once on a fresh machine / new checkout.
+        // All other coverage tasks call the same install guard automatically,
+        // but running this first gives cleaner terminal output.
+        "label": "coverage · install toolchain  (cargo-llvm-cov + llvm-tools-preview)",
+        "command": "bash",
+        "args": [
+            "-c",
+            "cargo install cargo-llvm-cov --locked && rustup component add llvm-tools-preview && echo 'cargo-llvm-cov ready.'"
+        ],
+        "tags": [
+            "coverage"
+        ]
+    },
+    {
+        // Full workspace coverage → lcov + HTML.  Mirrors the CI coverage step
+        // exactly so local numbers match what Codecov receives.
+        // Self-bootstrapping: installs cargo-llvm-cov + llvm-tools-preview if absent.
+        "label": "coverage · workspace  [lcov + HTML, SKIP_LLM=1]",
+        "command": "bash",
+        "args": [
+            "-c",
+            "cargo install cargo-llvm-cov --locked && rustup component add llvm-tools-preview && cargo llvm-cov --workspace --lcov --output-path lcov.info --ignore-filename-regex 'tests/' && cargo llvm-cov report --html --output-dir coverage-html && echo 'Report → coverage-html/index.html'"
+        ],
+        "env": {
+            "SKIP_LLM": "1"
+        },
+        "tags": [
+            "coverage"
+        ]
+    },
+    {
+        // Quick terminal summary – prints per-file % to stdout without writing
+        // any files.  Fastest feedback loop after editing a module.
+        "label": "coverage · summary (terminal only)  [SKIP_LLM=1]",
+        "command": "bash",
+        "args": [
+            "-c",
+            "cargo install cargo-llvm-cov --locked && rustup component add llvm-tools-preview && cargo llvm-cov --workspace --ignore-filename-regex 'tests/' --summary-only"
+        ],
+        "env": {
+            "SKIP_LLM": "1"
+        },
+        "tags": [
+            "coverage"
+        ]
+    },
+    {
+        // Emit lcov.info only (no HTML build).  Use this when you only need
+        // the data file – e.g. to feed a Coverage Gutters extension or to
+        // upload to Codecov manually.
+        "label": "coverage · lcov only  [SKIP_LLM=1]",
+        "command": "bash",
+        "args": [
+            "-c",
+            "cargo install cargo-llvm-cov --locked && rustup component add llvm-tools-preview && cargo llvm-cov --workspace --lcov --output-path lcov.info --ignore-filename-regex 'tests/'"
+        ],
+        "env": {
+            "SKIP_LLM": "1"
+        },
+        "tags": [
+            "coverage"
+        ]
+    },
+    {
+        // Open the HTML report in the default browser immediately after building.
+        "label": "coverage · open HTML report  [SKIP_LLM=1]",
+        "command": "bash",
+        "args": [
+            "-c",
+            "cargo install cargo-llvm-cov --locked && rustup component add llvm-tools-preview && cargo llvm-cov --workspace --lcov --output-path lcov.info --ignore-filename-regex 'tests/' && cargo llvm-cov report --html --output-dir coverage-html && open coverage-html/index.html"
+        ],
+        "env": {
+            "SKIP_LLM": "1"
+        },
+        "tags": [
+            "coverage"
+        ]
+    },
+    {
+        // Library crate only (src/lib.rs tree); skips integration tests for
+        // faster iteration when working on internal unit tests.
+        "label": "coverage · lib only  [SKIP_LLM=1]",
+        "command": "bash",
+        "args": [
+            "-c",
+            "cargo install cargo-llvm-cov --locked && rustup component add llvm-tools-preview && cargo llvm-cov --lib --lcov --output-path lcov.info --ignore-filename-regex 'tests/' --summary-only"
+        ],
+        "env": {
+            "SKIP_LLM": "1"
+        },
+        "tags": [
+            "coverage"
+        ]
+    },
+    {
+        // Clean stale .profraw / .profdata artefacts left by cancelled runs.
+        // Run this if coverage numbers look wrong or the tool complains about
+        // stale instrumentation data.
+        "label": "coverage · clean profraw artefacts",
+        "command": "bash",
+        "args": [
+            "-c",
+            "cargo llvm-cov clean --workspace && echo 'Profraw artefacts removed.'"
+        ],
+        "tags": [
+            "coverage"
+        ]
+    },
+    // ══════════════════════════════════════════════════════════════════════════
     // § CI – full local simulation (mirrors .github/workflows/ci.yml order)
     // ══════════════════════════════════════════════════════════════════════════
     {
         // Runs all CI gates sequentially so the first failure is immediately
         // obvious.  Equivalent to pushing to main without waiting for GitHub.
-        "label": "CI · full local simulation (fmt → clippy → build → test → doc)",
+        "label": "CI · full local simulation (fmt → clippy → build → test → coverage → doc)",
         "command": "bash",
         "args": [
             "-c",
-            "set -e && cargo fmt --all -- --check && cargo clippy --all-targets -- -D warnings && cargo build --release && SKIP_LLM=1 cargo test && RUSTDOCFLAGS='--cfg docsrs -D warnings' cargo doc --no-deps"
+            "set -e && cargo fmt --all -- --check && cargo clippy --all-targets -- -D warnings && cargo build --release && SKIP_LLM=1 cargo test && cargo install cargo-llvm-cov --locked && rustup component add llvm-tools-preview && SKIP_LLM=1 cargo llvm-cov --workspace --lcov --output-path lcov.info --ignore-filename-regex 'tests/' && cargo llvm-cov report --html --output-dir coverage-html && RUSTDOCFLAGS='--cfg docsrs -D warnings' cargo doc --no-deps"
         ],
         "tags": [
             "ci"

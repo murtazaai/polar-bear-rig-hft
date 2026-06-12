@@ -141,6 +141,39 @@ jobs: # Jobs (required)
             - name: Tests (offline stub mode)
               run: SKIP_LLM=1 cargo test --workspace
 
+            - name: Install cargo-llvm-cov
+              if: matrix.rust == 'stable'
+              uses: taiki-e/install-action@v2
+              with:
+                  tool: cargo-llvm-cov
+
+            - name: Coverage (llvm-cov)
+              if: matrix.rust == 'stable'
+              run: |
+                  SKIP_LLM=1 cargo llvm-cov \
+                    --workspace \
+                    --lcov --output-path lcov.info \
+                    --ignore-filename-regex 'tests/'
+                  SKIP_LLM=1 cargo llvm-cov report \
+                    --html --output-dir coverage-html
+
+            - name: Upload coverage report (HTML artifact)
+              if: matrix.rust == 'stable'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-html
+                  path: coverage-html/
+                  retention-days: 30
+
+            - name: Upload lcov to Codecov
+              if: matrix.rust == 'stable'
+              uses: codecov/codecov-action@v4
+              with:
+                  files: lcov.info
+                  fail_ci_if_error: false # don't break CI on upload hiccups
+              env:
+                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
             - name: Docs
               if: matrix.rust == 'stable'
               env:

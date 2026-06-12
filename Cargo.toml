@@ -107,6 +107,20 @@ dotenvy = "^0.15"
 tokio-test = "^0.4"
 mockall    = "^0.13"
 
+# ── Coverage ──────────────────────────────────────────────────────
+# cargo-llvm-cov is the standard Rust coverage tool; it wraps
+# LLVM source-based coverage instrumentation and emits lcov /
+# HTML / Codecov-JSON reports without a separate nightly toolchain.
+# Install once per CI runner:  cargo install cargo-llvm-cov --locked
+# Run:  cargo llvm-cov --workspace --lcov --output-path lcov.info
+[profile.coverage]
+inherits  = "test"
+# LLVM source-based coverage requires debug info and disables LTO.
+debug             = true
+lto               = false
+codegen-units     = 256   # maximise parallelism during instrumented build
+opt-level         = 0
+
 # ── Release Profile ───────────────────────────────────────────────
 # Maximise performance and minimise binary size through LTO and
 # single-codegen-unit compilation.  Mirrors the rig workspace profile.
