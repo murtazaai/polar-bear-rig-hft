@@ -114,7 +114,12 @@ jobs: # Jobs (required)
               uses: dtolnay/rust-toolchain@master
               with:
                   toolchain: ${{ matrix.rust }}
-                  components: rustfmt, clippy
+                  # llvm-tools-preview is the Rust component that cargo-llvm-cov
+                  # wraps; it must be present before the coverage step runs.
+                  # rustfmt + clippy are only used on stable (gated below), but
+                  # installing them on MSRV too is harmless and avoids a second
+                  # toolchain action call.
+                  components: rustfmt, clippy, llvm-tools-preview
 
             - name: Cache cargo registry
               uses: actions/cache@v4
@@ -145,6 +150,9 @@ jobs: # Jobs (required)
               if: matrix.rust == 'stable'
               uses: taiki-e/install-action@v2
               with:
+                  # taiki-e/install-action installs the cargo-llvm-cov *binary*;
+                  # the llvm-tools-preview *component* is handled above in the
+                  # dtolnay/rust-toolchain step so both halves are present.
                   tool: cargo-llvm-cov
 
             - name: Coverage (llvm-cov)
