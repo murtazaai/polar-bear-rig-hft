@@ -14,8 +14,10 @@
 | Tool | Version | Install |
 |---|---|---|
 | Rust stable toolchain | ≥ 1.93.1 | `rustup update stable` |
-| `rustfmt` | (with toolchain) | `rustup component add rustfmt` |
-| `clippy` | (with toolchain) | `rustup component add clippy` |
+| Rust nightly | any recent | `rustup toolchain install nightly --component rustfmt` |
+| `clippy` | (with stable) | `rustup component add clippy` |
+| `llvm-tools-preview` | (with stable) | `rustup component add llvm-tools-preview` |
+| `cargo-llvm-cov` | latest | `cargo install cargo-llvm-cov --locked` |
 
 ### Setup
 
@@ -76,10 +78,28 @@ ANTHROPIC_API_KEY=sk-ant-... cargo test --test providers -- --ignored --test-thr
 ### Format, lint, docs
 
 ```bash
-cargo fmt --all                                      # format
+cargo +nightly fmt --all                             # format (nightly; rustfmt.toml uses unstable opts)
+cargo +nightly fmt --all -- --check                  # CI-style check
 cargo clippy --all-targets -- -D warnings            # lint (CI-strict)
 cargo doc --open                                     # browse API docs
 RUSTDOCFLAGS="--cfg docsrs" cargo doc                # with docsrs conditional items
+```
+
+### Coverage (cargo-llvm-cov)
+
+```bash
+# Full report: lcov.info + coverage-html/
+SKIP_LLM=1 cargo llvm-cov --workspace \
+  --lcov --output-path lcov.info \
+  --ignore-filename-regex 'tests/'
+SKIP_LLM=1 cargo llvm-cov report --html --output-dir coverage-html
+open coverage-html/index.html          # browse line-by-line HTML report
+
+# Quick terminal summary
+SKIP_LLM=1 cargo llvm-cov --workspace --summary-only
+
+# Clean stale instrumentation artefacts after a cancelled run
+cargo llvm-cov clean --workspace
 ```
 
 ---
@@ -113,15 +133,36 @@ RUSTDOCFLAGS="--cfg docsrs" cargo doc                # with docsrs conditional i
 
 ## CI
 
-The CI pipeline runs on every push and pull request to `main`:
+The CI pipeline (`.github/workflows/ci.yml`) runs on every push and pull request
+to `main`. It has two parallel jobs:
 
-1. `cargo fmt --all -- --check` - enforces code style
-2. `cargo clippy --all-targets -- -D warnings` - enforces lint rules
-3. `cargo build --release` - ensures the release binary compiles
-4. `SKIP_LLM=1 cargo test --workspace` - runs all deterministic tests
-5. `RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc` - ensures documentation
-   compiles without warnings
-6. MSRV check against Rust 1.93.1
+### `fmt` job — nightly rustfmt
+
+`rustfmt.toml` uses nightly-only options (`imports_granularity`, `group_imports`,
+`wrap_comments`, etc.) enabled by `unstable_features = true`. The format check runs
+under `dtolnay/rust-toolchain@nightly` in its own job so the nightly toolchain never
+interferes with the matrix job.
+
+| Step | Command |
+|---|---|
+| Format check | `cargo fmt --all -- --check` (nightly rustfmt) |
+
+### `ci` job — stable + MSRV matrix (`stable`, `1.93.1`)
+
+| Step | What it enforces |
+|---|---|
+| Clippy | `cargo clippy --all-targets -- -D warnings` — zero warnings (stable only) |
+| Build | `cargo build --release` — release binary compiles |
+| Tests | `SKIP_LLM=1 cargo test --workspace` — all deterministic tests pass |
+| Coverage | `cargo llvm-cov --workspace --lcov …` + HTML report (stable only) |
+| HTML artifact | `coverage-html/` uploaded, retained 30 days |
+| Docs | `RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc --no-deps` (stable only) |
+| MSRV | Full build + test on Rust 1.93.1 |
+
+**Coverage toolchain:** `llvm-tools-preview` is installed as a toolchain component;
+`cargo-llvm-cov` binary is installed via `taiki-e/install-action@v2`.
+The `target/` directory is intentionally **not** cached — at ~3 GB it causes
+step-timeout cancellations; the registry cache (~100 MB) is sufficient.
 
 ---
 

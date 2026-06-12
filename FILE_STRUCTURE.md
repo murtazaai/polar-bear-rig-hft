@@ -20,12 +20,13 @@ polar-bear-rig-hft/
 │  ── GitHub Actions CI ──────────────────────────────────────────────
 ├── .github/
 │   └── workflows/
-│       └── ci.yml         fmt → clippy → build → test → docs → MSRV (1.93.1)
+│       └── ci.yml         fmt (nightly) ∥ clippy → build → test → coverage → docs → MSRV (1.93.1)
 │
 │  ── Zed IDE config ─────────────────────────────────────────────────
 ├── .zed/
-│   ├── debug.json
-│   └── tasks.json
+│   ├── settings.json        rust-analyzer config; format-on-save; inlay hints; import grouping
+│   ├── tasks.json           build, test, lint, fmt, coverage, run, examples, CI simulation
+│   └── debug.json           CodeLLDB configs for all binary modes, integration tests, coverage
 │
 │  ── Documentation ──────────────────────────────────────────────────
 ├── docs/

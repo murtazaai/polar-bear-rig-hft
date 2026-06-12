@@ -8,6 +8,47 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `cargo-llvm-cov` coverage toolchain: LLVM source-based instrumentation via
+  `taiki-e/install-action@v2` + `llvm-tools-preview` component; emits `lcov.info`
+  and `coverage-html/` on every CI run (stable matrix leg only)
+- `[profile.coverage]` in `Cargo.toml`: inherits test profile with `debug = true`,
+  `lto = false`, `opt-level = 0` for accurate instrumented builds
+- `.zed/tasks.json`: `§ COVERAGE` section with six self-bootstrapping tasks
+  (`workspace`, `summary`, `lcov only`, `open HTML report`, `lib only`,
+  `clean profraw artefacts`, `install toolchain`)
+- `.zed/debug.json`: four coverage entries accessible from the Run & Debug panel
+  (`workspace`, `summary`, `open HTML report`, `clean profraw artefacts`)
+- `rustfmt.toml`: `unstable_features = true` + inline `# nightly` annotations on
+  all nightly-only options; silences stable rustfmt warnings in CI and locally
+- CI `fmt` job: dedicated parallel job running `dtolnay/rust-toolchain@nightly`
+  with `rustfmt` component; isolates nightly from the matrix job entirely
+
+### Changed
+
+- **CI – `fmt` job split out**: format check moved from the `ci` matrix job into
+  its own `fmt` job (nightly rustfmt); eliminates the toolchain-override / restore
+  dance that caused clippy failures and step cancellations
+- **CI – `llvm-tools-preview`** added to `dtolnay/rust-toolchain` component list
+  in the `ci` job (required by `cargo-llvm-cov`)
+- **CI – `rustfmt` removed** from `ci` job component list (now handled by `fmt` job)
+- **CI – `target/` removed from cache**: `actions/cache` path list trimmed to
+  registry only (`~/.cargo/registry/index`, `cache`, `~/.cargo/git/db`); `target/`
+  at ~3 GB caused step-timeout cancellations with no net build-time benefit
+- **CI – Codecov upload removed**: `codecov/codecov-action` step and
+  `CODECOV_TOKEN` secret dependency removed after Codecov GitHub plugin was
+  uninstalled; HTML artifact upload via `actions/upload-artifact@v4` is retained
+- **CI – `codecov/codecov-action` upgraded** from `v4` → `v5` (while it was present)
+- **CI – `cargo test` step** unchanged; coverage runs as a separate subsequent step
+  so test failures are reported independently of coverage failures
+- `CONTRIBUTING.md`: prerequisites table updated (nightly, `llvm-tools-preview`,
+  `cargo-llvm-cov`); fmt commands updated to `cargo +nightly fmt`; coverage workflow
+  documented; CI section rewritten to reflect two-job structure
+- `FILE_STRUCTURE.md`: `ci.yml` annotation and `.zed/` block updated
+- `README.md`: Codecov badge removed; CI pipeline table updated; prerequisites,
+  lint/format, and coverage sections updated to match current toolchain
+
 ---
 
 ## [0.1.0] - 2025-07-01

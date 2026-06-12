@@ -507,7 +507,6 @@ Runs independently so the nightly toolchain never interferes with the matrix job
 | 3 | `SKIP_LLM=1 cargo test --workspace` | All deterministic tests pass |
 | 4 | `cargo llvm-cov --workspace --lcov …` | Coverage report + `lcov.info` (stable only) |
 | 5 | Upload `coverage-html/` | HTML artifact retained 30 days |
-| 6 | Upload `lcov.info` to Codecov | Skipped silently when `CODECOV_TOKEN` secret is absent |
 | 7 | `RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc` | Docs compile without warnings (stable only) |
 | MSRV | full build + test on `1.93.1` | Minimum supported Rust version enforced |
 
@@ -515,9 +514,7 @@ Runs independently so the nightly toolchain never interferes with the matrix job
 - `llvm-tools-preview` is installed as part of the toolchain component list
 - `cargo-llvm-cov` binary is installed via `taiki-e/install-action@v2`
 - `target/` is intentionally **not** cached — at ~3 GB it causes step-timeout cancellations; the registry cache (~100 MB) is sufficient
-- Codecov upload requires `CODECOV_TOKEN` in **Settings → Secrets → Actions**; the step is skipped cleanly when absent with a `::notice::` annotation in the log
 
-**To enable Codecov:** add `CODECOV_TOKEN` to repo secrets. Get the token from [codecov.io](https://codecov.io) after connecting the repository.
 
 ---
 
