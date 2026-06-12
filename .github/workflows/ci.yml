@@ -175,12 +175,15 @@ jobs: # Jobs (required)
 
             - name: Upload lcov to Codecov
               if: matrix.rust == 'stable'
-              uses: codecov/codecov-action@v4
+              uses: codecov/codecov-action@v5
+              # continue-on-error keeps CI green until CODECOV_TOKEN is added
+              # to repo secrets (Settings → Secrets → Actions → New secret).
+              # Remove once the token is configured.
+              continue-on-error: true
               with:
                   files: lcov.info
-                  fail_ci_if_error: false # don't break CI on upload hiccups
-              env:
-                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+                  fail_ci_if_error: false   # don't break CI on Codecov outages
+                  token: ${{ secrets.CODECOV_TOKEN }}
 
             - name: Docs
               if: matrix.rust == 'stable'
