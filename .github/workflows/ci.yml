@@ -186,16 +186,33 @@ jobs: # Jobs (required)
                   path: coverage-html/
                   retention-days: 30
 
-            - name: Upload lcov to Codecov
+            - name: Check Codecov token
+              # secrets.* is not accessible in if: expressions, so we write
+              # a boolean step output that the upload step can gate on.
               if: matrix.rust == 'stable'
+              id: codecov_token_check
+              env:
+                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+              run: |
+                  if [ -n "$CODECOV_TOKEN" ]; then
+                    echo "present=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "present=false" >> "$GITHUB_OUTPUT"
+                    echo "::notice::CODECOV_TOKEN secret is not set – skipping Codecov upload."
+                    echo "::notice::To enable: Settings → Secrets → Actions → New secret: CODECOV_TOKEN"
+                  fi
+
+            - name: Upload lcov to Codecov
+              # Skipped entirely when CODECOV_TOKEN is absent; no noisy
+              # "Token required" errors on forks or fresh repos.
+              # HTML artifact (step above) is always uploaded regardless.
+              if: >-
+                  matrix.rust == 'stable' &&
+                  steps.codecov_token_check.outputs.present == 'true'
               uses: codecov/codecov-action@v5
-              # continue-on-error keeps CI green until CODECOV_TOKEN is added
-              # to repo secrets (Settings → Secrets → Actions → New secret).
-              # Remove once the token is configured.
-              continue-on-error: true
               with:
                   files: lcov.info
-                  fail_ci_if_error: false   # don't break CI on Codecov outages
+                  fail_ci_if_error: true
                   token: ${{ secrets.CODECOV_TOKEN }}
 
             - name: Docs
