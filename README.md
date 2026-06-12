@@ -9,7 +9,6 @@
 [![rig-core](https://img.shields.io/badge/rig--core-%5E0.36-purple.svg)](https://rig.rs)
 [![Solana](https://img.shields.io/badge/solana-devnet%2Fmainnet-9945FF.svg)](https://solana.com)
 [![CI](https://github.com/murtazaai/polar-bear-rig-hft/actions/workflows/ci.yml/badge.svg)](https://github.com/murtazaai/polar-bear-rig-hft/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/murtazaai/polar-bear-rig-hft/branch/main/graph/badge.svg)](https://codecov.io/gh/murtazaai/polar-bear-rig-hft)
 [![License: PBS](https://img.shields.io/badge/license-PBS-blue.svg)](LICENSE-PBS)
 
 > Built by **[Murtaza Ali Imtiaz](https://github.com/murtazaai)** · Technology Lead · **Polar Bear (🍨)** · July 2019 – Present
