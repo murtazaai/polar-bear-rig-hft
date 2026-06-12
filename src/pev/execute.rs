@@ -2,7 +2,7 @@
 //!
 //! Each [`TradeTask`] is handed to a `claude-sonnet-4-6` agent that reasons
 //! step-by-step and invokes the appropriate tool.  Tool calls are simulated in
-//! this demo; in production they would be real [`rig::tool::Tool`]
+//! this demo; in production they would be real [`rig_core::tool::Tool`]
 //! implementations backed by live market data APIs.
 //!
 //! When [`crate::config::Config::skip_llm`] is `true` (no API key or
@@ -17,9 +17,9 @@
 //!
 //! Calling `.agent()` on `anthropic::Client` requires **both** traits in scope:
 //!
-//! - [`rig::client::CompletionClient`] - provides the `.agent()` builder method.
-//! - [`rig::client::ProviderClient`] - required by the rig provider-client pattern; omitting either
-//!   causes `E0599: no method named 'agent'`.
+//! - [`rig_core::client::CompletionClient`] - provides the `.agent()` builder method.
+//! - [`rig_core::client::ProviderClient`] - required by the rig provider-client pattern; omitting
+//!   either causes `E0599: no method named 'agent'`.
 
 use anyhow::Result;
 use rig_core::{
