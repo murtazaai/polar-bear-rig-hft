@@ -62,7 +62,7 @@ missing_errors_doc      = "allow"
 
 # ── Core AI / Agent Framework ─────────────────────────────────────
 [dependencies]
-rig-core = "^0.38.2"
+rig-core = "^0.37.0"
 
 # ── Async Runtime ─────────────────────────────────────────────────
 tokio = { version = "^1", features = ["full"] }
