@@ -136,6 +136,16 @@ jobs: # Jobs (required)
               if: matrix.rust == 'stable'
               run: cargo fmt --all -- --check
 
+            - name: Install nightly rustfmt
+              if: matrix.rust == 'stable'
+              uses: dtolnay/rust-toolchain@nightly
+              with:
+                  components: rustfmt
+
+            - name: Format check
+              if: matrix.rust == 'stable'
+              run: cargo +nightly fmt --all -- --check
+
             - name: Clippy
               if: matrix.rust == 'stable'
               run: cargo clippy --all-targets -- -D warnings
@@ -182,7 +192,7 @@ jobs: # Jobs (required)
               continue-on-error: true
               with:
                   files: lcov.info
-                  fail_ci_if_error: false   # don't break CI on Codecov outages
+                  fail_ci_if_error: false # don't break CI on Codecov outages
                   token: ${{ secrets.CODECOV_TOKEN }}
 
             - name: Docs
