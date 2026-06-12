@@ -134,16 +134,26 @@ jobs: # Jobs (required)
 
             - name: Install nightly rustfmt
               # rustfmt.toml uses nightly-only options (imports_granularity,
-              # group_imports, wrap_comments, normalize_comments, etc.).
-              # We use `rustup toolchain install` rather than
-              # dtolnay/rust-toolchain here because dtolnay's action always
-              # sets the newly installed toolchain as the shell default, which
-              # would cause every subsequent bare `cargo` call to use nightly
-              # (where clippy, llvm-tools, etc. are not installed).
-              # `rustup toolchain install` adds the toolchain without touching
-              # the active default; cargo +nightly below targets it explicitly.
+              # group_imports, wrap_comments, normalize_comments, etc.) which
+              # require a nightly rustfmt binary.
+              #
+              # dtolnay/rust-toolchain is used here (not `rustup toolchain
+              # install`) because it caches the toolchain tarball via the
+              # actions/cache layer, making the download fast and reliable.
+              # The side-effect is that it sets nightly as the shell default,
+              # so we immediately restore stable with `rustup default` to keep
+              # every subsequent bare `cargo` call on the matrix toolchain.
               if: matrix.rust == 'stable'
-              run: rustup toolchain install nightly --no-self-update --component rustfmt --profile minimal
+              uses: dtolnay/rust-toolchain@nightly
+              with:
+                  components: rustfmt
+
+            - name: Restore stable as active toolchain
+              # dtolnay/rust-toolchain@nightly left nightly as the default;
+              # flip it back so clippy, build, test, llvm-cov, and doc all
+              # resolve to the stable toolchain installed in the first step.
+              if: matrix.rust == 'stable'
+              run: rustup default stable
 
             - name: Format check  [nightly rustfmt, rustfmt.toml unstable opts]
               if: matrix.rust == 'stable'
@@ -207,8 +217,8 @@ jobs: # Jobs (required)
               # "Token required" errors on forks or fresh repos.
               # HTML artifact (step above) is always uploaded regardless.
               if: >-
-                  matrix.rust == 'stable' &&
-                  steps.codecov_token_check.outputs.present == 'true'
+                matrix.rust == 'stable' &&
+                steps.codecov_token_check.outputs.present == 'true'
               uses: codecov/codecov-action@v5
               with:
                   files: lcov.info
