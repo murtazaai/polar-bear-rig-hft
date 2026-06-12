@@ -132,17 +132,18 @@ jobs: # Jobs (required)
                   key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
                   restore-keys: ${{ runner.os }}-cargo-${{ matrix.rust }}-
 
-            - name: Format check
-              if: matrix.rust == 'stable'
-              run: cargo fmt --all -- --check
-
             - name: Install nightly rustfmt
+              # rustfmt.toml uses nightly-only options (imports_granularity,
+              # group_imports, wrap_comments, normalize_comments, etc.).
+              # A dedicated nightly toolchain is installed *only* for the fmt
+              # check; all other steps continue to use matrix.rust (stable /
+              # MSRV).  The +nightly override is scoped to this single step.
               if: matrix.rust == 'stable'
               uses: dtolnay/rust-toolchain@nightly
               with:
                   components: rustfmt
 
-            - name: Format check
+            - name: Format check  [nightly rustfmt, rustfmt.toml unstable opts]
               if: matrix.rust == 'stable'
               run: cargo +nightly fmt --all -- --check
 
@@ -192,7 +193,7 @@ jobs: # Jobs (required)
               continue-on-error: true
               with:
                   files: lcov.info
-                  fail_ci_if_error: false # don't break CI on Codecov outages
+                  fail_ci_if_error: false   # don't break CI on Codecov outages
                   token: ${{ secrets.CODECOV_TOKEN }}
 
             - name: Docs
