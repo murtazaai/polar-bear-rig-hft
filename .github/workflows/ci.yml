@@ -135,13 +135,15 @@ jobs: # Jobs (required)
             - name: Install nightly rustfmt
               # rustfmt.toml uses nightly-only options (imports_granularity,
               # group_imports, wrap_comments, normalize_comments, etc.).
-              # A dedicated nightly toolchain is installed *only* for the fmt
-              # check; all other steps continue to use matrix.rust (stable /
-              # MSRV).  The +nightly override is scoped to this single step.
+              # We use `rustup toolchain install` rather than
+              # dtolnay/rust-toolchain here because dtolnay's action always
+              # sets the newly installed toolchain as the shell default, which
+              # would cause every subsequent bare `cargo` call to use nightly
+              # (where clippy, llvm-tools, etc. are not installed).
+              # `rustup toolchain install` adds the toolchain without touching
+              # the active default; cargo +nightly below targets it explicitly.
               if: matrix.rust == 'stable'
-              uses: dtolnay/rust-toolchain@nightly
-              with:
-                  components: rustfmt
+              run: rustup toolchain install nightly --no-self-update --component rustfmt --profile minimal
 
             - name: Format check  [nightly rustfmt, rustfmt.toml unstable opts]
               if: matrix.rust == 'stable'
